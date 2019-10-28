@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -46,7 +46,13 @@ public class ResultSetWrapper {
   private final List<String> classNames = new ArrayList<>();
   private final List<JdbcType> jdbcTypes = new ArrayList<>();
   private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<>();
+  /**
+   * 有 mapped 的字段的名字的映射
+   */
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
+  /**
+   * 无 mapped 的字段的名字的映射
+   */
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
 
   public ResultSetWrapper(ResultSet rs, Configuration configuration) throws SQLException {
@@ -56,6 +62,9 @@ public class ResultSetWrapper {
     final ResultSetMetaData metaData = rs.getMetaData();
     final int columnCount = metaData.getColumnCount();
     for (int i = 1; i <= columnCount; i++) {
+      // mysql中getColumnLabel 返回是field的SQL AS的值；getColumnName返回的是field的原始名字
+      // mssql中不存在这样的问题，保险起见最好用getColumnLabel
+      // mybatis默认也是用getColumnLabel
       columnNames.add(configuration.isUseColumnLabel() ? metaData.getColumnLabel(i) : metaData.getColumnName(i));
       jdbcTypes.add(JdbcType.forCode(metaData.getColumnType(i)));
       classNames.add(metaData.getColumnClassName(i));
@@ -88,16 +97,15 @@ public class ResultSetWrapper {
   }
 
   /**
+   * 获取读取结果集时要使用的类型转换器
    * Gets the type handler to use when reading the result set.
    * Tries to get from the TypeHandlerRegistry by searching for the property type.
    * If not found it gets the column JDBC type and tries to get a handler for it.
    * 
-   * @param propertyType
-   * @param columnName
-   * @return
    */
   public TypeHandler<?> getTypeHandler(Class<?> propertyType, String columnName) {
     TypeHandler<?> handler = null;
+    // 从缓存中获取指定字段名的所有类型转换器
     Map<Class<?>, TypeHandler<?>> columnHandlers = typeHandlerMap.get(columnName);
     if (columnHandlers == null) {
       columnHandlers = new HashMap<>();
@@ -141,10 +149,14 @@ public class ResultSetWrapper {
     return null;
   }
 
+  /**
+   * 初始化有 mapped 和无 mapped的字段的名字数组
+   */
   private void loadMappedAndUnmappedColumnNames(ResultMap resultMap, String columnPrefix) throws SQLException {
     List<String> mappedColumnNames = new ArrayList<>();
     List<String> unmappedColumnNames = new ArrayList<>();
     final String upperColumnPrefix = columnPrefix == null ? null : columnPrefix.toUpperCase(Locale.ENGLISH);
+    // 尝试对mappedColumns中的每项增加前缀
     final Set<String> mappedColumns = prependPrefixes(resultMap.getMappedColumns(), upperColumnPrefix);
     for (String columnName : columnNames) {
       final String upperColumnName = columnName.toUpperCase(Locale.ENGLISH);
@@ -154,8 +166,9 @@ public class ResultSetWrapper {
         unmappedColumnNames.add(columnName);
       }
     }
-    mappedColumnNamesMap.put(getMapKey(resultMap, columnPrefix), mappedColumnNames);
-    unMappedColumnNamesMap.put(getMapKey(resultMap, columnPrefix), unmappedColumnNames);
+    String mapKey = getMapKey(resultMap, columnPrefix);
+    mappedColumnNamesMap.put(mapKey, mappedColumnNames);
+    unMappedColumnNamesMap.put(mapKey, unmappedColumnNames);
   }
 
   public List<String> getMappedColumnNames(ResultMap resultMap, String columnPrefix) throws SQLException {

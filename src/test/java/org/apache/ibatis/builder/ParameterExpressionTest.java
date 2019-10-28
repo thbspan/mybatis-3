@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,12 +22,19 @@ import org.junit.Test;
 public class ParameterExpressionTest {
 
   @Test
+  public void customTest(){
+    Map<String, String> result = new ParameterExpression("property,javaType=int,jdbcType=NUMERIC");
+    System.out.println(result);
+  }
+
+  @Test
   public void simpleProperty() {
     Map<String, String> result = new ParameterExpression("id");
     Assert.assertEquals(1, result.size());
     Assert.assertEquals("id", result.get("property"));
   }
 
+  @Test
   public void propertyWithSpacesInside() {
     Map<String, String> result = new ParameterExpression(" with spaces ");
     Assert.assertEquals(1, result.size());

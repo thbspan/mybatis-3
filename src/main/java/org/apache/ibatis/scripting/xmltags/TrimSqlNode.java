@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -70,8 +70,17 @@ public class TrimSqlNode implements SqlNode {
   }
 
   private class FilteredDynamicContext extends DynamicContext {
+    /**
+     * 委托对象
+     */
     private DynamicContext delegate;
+    /**
+     * 是否prefix 已经被应用了
+     */
     private boolean prefixApplied;
+    /**
+     * 是否suffix 已经被应用了
+     */
     private boolean suffixApplied;
     private StringBuilder sqlBuffer;
 
@@ -84,6 +93,7 @@ public class TrimSqlNode implements SqlNode {
     }
 
     public void applyAll() {
+      // trim 多余的空格
       sqlBuffer = new StringBuilder(sqlBuffer.toString().trim());
       String trimmedUppercaseSql = sqlBuffer.toString().toUpperCase(Locale.ENGLISH);
       if (trimmedUppercaseSql.length() > 0) {
@@ -118,6 +128,9 @@ public class TrimSqlNode implements SqlNode {
       return delegate.getSql();
     }
 
+    /**
+     * 添加前缀、去除多余的前置连接词
+     */
     private void applyPrefix(StringBuilder sql, String trimmedUppercaseSql) {
       if (!prefixApplied) {
         prefixApplied = true;

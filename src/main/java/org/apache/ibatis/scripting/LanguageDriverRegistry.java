@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,6 +27,11 @@ public class LanguageDriverRegistry {
 
   private Class<? extends LanguageDriver> defaultDriverClass;
 
+  /**
+   * org.apache.ibatis.session.Configuration#Configuration()函数中会调用这个方法注册
+   *     languageRegistry.setDefaultDriverClass(XMLLanguageDriver.class);
+   *     languageRegistry.register(RawLanguageDriver.class);
+   */
   public void register(Class<? extends LanguageDriver> cls) {
     if (cls == null) {
       throw new IllegalArgumentException("null is not a valid Language Driver");

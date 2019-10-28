@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 /**
+ * 在Mapper接口中，每定义一个方法，对应一个 MapperMethod 对象
+ *
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
@@ -43,6 +45,9 @@ import java.util.*;
  */
 public class MapperMethod {
 
+  /**
+   * 记录SQL语句名称(id)和类型
+   */
   private final SqlCommand command;
   private final MethodSignature method;
 
@@ -56,6 +61,7 @@ public class MapperMethod {
     switch (command.getType()) {
       case INSERT: {
     	Object param = method.convertArgsToSqlCommandParam(args);
+    	// 返回值类型对结果进行转换
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
       }
@@ -101,6 +107,9 @@ public class MapperMethod {
     return result;
   }
 
+    /**
+     * 返回值类型对结果进行转换
+     */
   private Object rowCountResult(int rowCount) {
     final Object result;
     if (method.returnsVoid()) {
@@ -215,6 +224,9 @@ public class MapperMethod {
 
   public static class SqlCommand {
 
+    /**
+     * org.apache.ibatis.mapping.MappedStatement#getId()
+     */
     private final String name;
     private final SqlCommandType type;
 
@@ -248,15 +260,21 @@ public class MapperMethod {
       return type;
     }
 
+    /**
+     * 构造MappedStatement对象
+     */
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
+      // 接口名称 + 方法名称
       String statementId = mapperInterface.getName() + "." + methodName;
       if (configuration.hasStatement(statementId)) {
         return configuration.getMappedStatement(statementId);
       } else if (mapperInterface.equals(declaringClass)) {
         return null;
       }
+      // 查找父接口（继承的接口中包含此方法）
       for (Class<?> superInterface : mapperInterface.getInterfaces()) {
+        // 父类.isAssignableFrom(子类): true
         if (declaringClass.isAssignableFrom(superInterface)) {
           MappedStatement ms = resolveMappedStatement(superInterface, methodName,
               declaringClass, configuration);
@@ -271,18 +289,52 @@ public class MapperMethod {
 
   public static class MethodSignature {
 
+    /**
+     * 返回类型是否是集合
+     */
     private final boolean returnsMany;
+    /**
+     * 返回类型是否是Map
+     */
     private final boolean returnsMap;
+    /**
+     * 是否Void
+     */
     private final boolean returnsVoid;
+    /**
+     * 是否org.apache.ibatis.cursor.Cursor
+     */
     private final boolean returnsCursor;
+    /**
+     * 是否Optional
+     */
     private final boolean returnsOptional;
+    /**
+     * 返回类型
+     */
     private final Class<?> returnType;
+    /**
+     * 返回注解org.apache.ibatis.annotations.MapKey#value()
+     * 如果返回值类型是Map，则该字段记录了作为key的列名(注解MapKey返回值)
+     */
     private final String mapKey;
+    /**
+     * 方法参数org.apache.ibatis.session.ResultHandler#handleResult(org.apache.ibatis.session.ResultContext)的索引位置
+     * 如果为null, 说明不存在
+     */
     private final Integer resultHandlerIndex;
+    /**
+     * 和上面一个参数类似，方法参数org.apache.ibatis.session.RowBounds的索引位置
+     * 如果为null, 说明不存在
+     */
     private final Integer rowBoundsIndex;
+    /**
+     * 参数名解析类解析对象：处理Mapper接口中定义的方法的参数列表
+     */
     private final ParamNameResolver paramNameResolver;
 
     public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
+      // 获取方法的返回值类型
       Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, mapperInterface);
       if (resolvedReturnType instanceof Class<?>) {
         this.returnType = (Class<?>) resolvedReturnType;

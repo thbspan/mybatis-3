@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -101,6 +101,9 @@ public class MapperAnnotationBuilder {
   private static final Set<Class<? extends Annotation>> SQL_PROVIDER_ANNOTATION_TYPES = new HashSet<>();
 
   private final Configuration configuration;
+  /**
+   * MapperBuilder帮助类，提取xml annotation公共逻辑
+   */
   private final MapperBuilderAssistant assistant;
   private final Class<?> type;
 
@@ -126,11 +129,15 @@ public class MapperAnnotationBuilder {
   public void parse() {
     String resource = type.toString();
     if (!configuration.isResourceLoaded(resource)) {
+      // 查找对应的xml文件加载解析
       loadXmlResource();
       configuration.addLoadedResource(resource);
       assistant.setCurrentNamespace(type.getName());
+      // @CacheNamespace注解
       parseCache();
+      // 解析 @CacheNamespaceRef 注解
       parseCacheRef();
+      // 获取所有的方法：包括父接口或类的
       Method[] methods = type.getMethods();
       for (Method method : methods) {
         try {
@@ -640,6 +647,12 @@ public class MapperAnnotationBuilder {
     return args == null ? new Arg[0] : args.value();
   }
 
+  /**
+   * 处理org.apache.ibatis.annotations.SelectKey注解
+   * SelectKey(statement="call identity()", keyProperty="nameId", before=false, resultType=int.class)
+   * 通常用法：获取插入后自增主键的值
+   * 当然 <insert id="insertSelective" parameterType="com.lcworld.jiunixing.model.User"  useGeneratedKeys="true" keyProperty="id" > insert标签中配置useGeneratedKeys="true" keyProperty="id" 也能够拿到主键id
+   */
   private KeyGenerator handleSelectKeyAnnotation(SelectKey selectKeyAnnotation, String baseStatementId, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
     String id = baseStatementId + SelectKeyGenerator.SELECT_KEY_SUFFIX;
     Class<?> resultTypeClass = selectKeyAnnotation.resultType();

@@ -23,6 +23,7 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * 可能包含？，但是可以直接提交给数据库执行
  * @author Clinton Begin
  */
 public class StaticSqlSource implements SqlSource {

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -50,6 +50,9 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 /**
+ * XMLMapperBuilder
+ * MapperAnnotationBuilder
+ *
  * @author Clinton Begin
  */
 public class MapperBuilderAssistant extends BaseBuilder {
@@ -57,6 +60,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
   private String currentNamespace;
   private final String resource;
   private Cache currentCache;
+  /**
+   * 是否未解析成功 Cache 引用
+   */
   private boolean unresolvedCacheRef; // issue #676
 
   public MapperBuilderAssistant(Configuration configuration, String resource) {
@@ -74,6 +80,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       throw new BuilderException("The mapper element requires a namespace attribute to be specified.");
     }
 
+    // 如果当前已经设置了currentNamespace并且和currentNamespace不同则抛出异常
     if (this.currentNamespace != null && !this.currentNamespace.equals(currentNamespace)) {
       throw new BuilderException("Wrong namespace. Expected '"
           + this.currentNamespace + "' but found '" + currentNamespace + "'.");
@@ -173,6 +180,30 @@ public class MapperBuilderAssistant extends BaseBuilder {
         .build();
   }
 
+  /**
+   *   <resultMap id="earlyNestedDiscriminatorPost" type="org.apache.ibatis.domain.blog.Post">
+   *     <id property="id" column="post_id"/>
+   *     <result property="subject" column="post_subject"/>
+   *     <discriminator javaType="int" column="draft">
+   *       <case value="1">
+   *         <association property="author" resultMap="joinedAuthor"/>
+   *         <collection property="comments" resultMap="joinedComment"/>
+   *         <collection property="tags" resultMap="joinedTag"/>
+   *       </case>
+   *     </discriminator>
+   *   </resultMap>
+   *
+   *   <resultMap id="joinedAuthor" type="org.apache.ibatis.domain.blog.Author">
+   *     <id property="id" column="author_id"/>
+   *     <result property="username" column="author_username" javaType="string" jdbcType="VARCHAR"/>
+   *     <result property="password" column="author_password"/>
+   *     <result property="email" column="author_email"/>
+   *     <result property="bio" column="author_bio"/>
+   *     <result property="favouriteSection" column="author_favourite_section"/>
+   *   </resultMap>
+   *
+   *   结合配置更好理解
+   */
   public ResultMap addResultMap(
       String id,
       Class<?> type,
@@ -180,7 +211,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
       Discriminator discriminator,
       List<ResultMapping> resultMappings,
       Boolean autoMapping) {
+    // resultMap id 添加currentNamespace
     id = applyCurrentNamespace(id, false);
+    // extends属性添加currentNamespace
     extend = applyCurrentNamespace(extend, true);
 
     if (extend != null) {
@@ -298,6 +331,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       statementBuilder.parameterMap(statementParameterMap);
     }
 
+    // 创建 MappedStatement 对象
     MappedStatement statement = statementBuilder.build();
     configuration.addMappedStatement(statement);
     return statement;
@@ -373,9 +407,15 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String resultSet,
       String foreignColumn,
       boolean lazy) {
+    // 获取属性的javaType
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
+    //  <result column="id_card_no" property="idCardNo" typeHandler="com.xxx.StrEncHandler"/>
+    // 获取javaType对应的typeHandler,如果没有配置typeHandler 默认null
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+    //  <result column="id_card_no" property="idCardNo" typeHandler="com.xxx.StrEncHandler"/>
+    // column属性中包含=,的情况，目前没有遇到过
     List<ResultMapping> composites = parseCompositeColumnName(column);
+
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
         .jdbcType(jdbcType)
         .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
@@ -422,6 +462,17 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return composites;
   }
 
+  /**
+   *    <resultMap id="joinedAuthor" type="org.apache.ibatis.domain.blog.Author">
+   *        <id property="id" column="author_id"/>
+   *        <result property="username" column="author_username" javaType="string" jdbcType="varchar"/>
+   *      </resultMap>
+   *  结合上面的配置信息更容易理解
+   *    a、如果javaType为空且property不为空，根据resultMap[type 对象获取属性property set方法的java类型
+   *    b、如果javaType已经设置了，则直接使用此类型
+   *    c、默认返回的类型是Object
+   *
+   */
   private Class<?> resolveResultJavaType(Class<?> resultType, String property, Class<?> javaType) {
     if (javaType == null && property != null) {
       try {

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -46,9 +46,10 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
-      if (Object.class.equals(method.getDeclaringClass())) {
-        return method.invoke(this, args);
+      if (Object.class.equals(method.getDeclaringClass()) || isDefaultMethod(method)) {
+        return method.invoke(proxy, args);
       } else if (isDefaultMethod(method)) {
+        // Java8 接口中的默认方法（如何反射调用默认方法）
         return invokeDefaultMethod(proxy, method, args);
       }
     } catch (Throwable t) {
@@ -79,6 +80,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
 
   /**
    * Backport of java.lang.reflect.Method#isDefault()
+   * 兼容jdk7写法
    */
   private boolean isDefaultMethod(Method method) {
     return (method.getModifiers()

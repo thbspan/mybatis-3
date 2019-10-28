@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,8 +42,11 @@ public class BeanWrapper extends BaseWrapper {
 
   @Override
   public Object get(PropertyTokenizer prop) {
+    // 判断位置索引是否存在
     if (prop.getIndex() != null) {
+      // 先获取集合属性值
       Object collection = resolveCollection(prop, object);
+      // 再获取集合属性指定索引位置的值
       return getCollectionValue(prop, collection);
     } else {
       return getBeanProperty(prop, object);

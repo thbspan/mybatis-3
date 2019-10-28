@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2016 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ public interface LanguageDriver {
   /**
    * Creates a {@link ParameterHandler} that passes the actual parameters to the the JDBC statement.
    * 
-   * @param mappedStatement The mapped statement that is being executed
-   * @param parameterObject The input parameter object (can be null) 
-   * @param boundSql The resulting SQL once the dynamic language has been executed.
+   * @param mappedStatement The mapped statement that is being executed 正在执行的映射语句
+   * @param parameterObject The input parameter object (can be null) 输入参数
+   * @param boundSql The resulting SQL once the dynamic language has been executed.动态语言执行后生成的SQL
    * @return
    * @author Frank D. Martinez [mnesarco]
    * @see DefaultParameterHandler
@@ -40,7 +40,7 @@ public interface LanguageDriver {
   /**
    * Creates an {@link SqlSource} that will hold the statement read from a mapper xml file. 
    * It is called during startup, when the mapped statement is read from a class or an xml file.
-   * 
+   *  创建 SqlSource 对象，从 Mapper XML 配置的 Statement 标签中，即 <select /> 等。
    * @param configuration The MyBatis configuration
    * @param script XNode parsed from a XML file
    * @param parameterType input parameter type got from a mapper method or specified in the parameterType xml attribute. Can be null.
@@ -51,7 +51,7 @@ public interface LanguageDriver {
   /**
    * Creates an {@link SqlSource} that will hold the statement read from an annotation.
    * It is called during startup, when the mapped statement is read from a class or an xml file.
-   * 
+   * 创建 SqlSource 对象，从方法注解配置，即 @Select 等。
    * @param configuration The MyBatis configuration
    * @param script The content of the annotation
    * @param parameterType input parameter type got from a mapper method or specified in the parameterType xml attribute. Can be null.

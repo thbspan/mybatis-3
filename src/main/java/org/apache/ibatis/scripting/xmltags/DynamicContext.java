@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2015 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ public class DynamicContext {
   public static final String DATABASE_ID_KEY = "_databaseId";
 
   static {
+    // 设置ognl属性访问器
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
 
@@ -121,6 +122,7 @@ public class DynamicContext {
     @Override
     public void setProperty(Map context, Object target, Object name, Object value)
         throws OgnlException {
+      @SuppressWarnings("unchecked")
       Map<Object, Object> map = (Map<Object, Object>) target;
       map.put(name, value);
     }

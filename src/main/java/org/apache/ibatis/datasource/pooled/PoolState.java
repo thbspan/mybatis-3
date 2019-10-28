@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 连接池状态
+ *
+ * 记录空闲和激活的PooledConnection集合，以及相关的数据统计
  * @author Clinton Begin
  */
 public class PoolState {
@@ -30,10 +33,25 @@ public class PoolState {
   protected long requestCount = 0;
   protected long accumulatedRequestTime = 0;
   protected long accumulatedCheckoutTime = 0;
+  /**
+   * 获取到连接超时的次数
+   */
   protected long claimedOverdueConnectionCount = 0;
+  /**
+   * 获取到连接超时的
+   */
   protected long accumulatedCheckoutTimeOfOverdueConnections = 0;
+  /**
+   * 等待连接的实际
+   */
   protected long accumulatedWaitTime = 0;
+  /**
+   * 等待连接的次数
+   */
   protected long hadToWaitCount = 0;
+  /**
+   * 获取到坏的连接的次数
+   */
   protected long badConnectionCount = 0;
 
   public PoolState(PooledDataSource dataSource) {

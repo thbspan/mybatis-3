@@ -47,6 +47,7 @@ public interface Cache {
   String getId();
 
   /**
+   * 向缓存中添加对象
    * @param key Can be any object but usually it is a {@link CacheKey}
    * @param value The result of a select.
    */
@@ -76,7 +77,7 @@ public interface Cache {
 
   /**
    * Clears this cache instance
-   */  
+   */
   void clear();
 
   /**

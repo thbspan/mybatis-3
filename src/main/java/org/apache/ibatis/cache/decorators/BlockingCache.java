@@ -101,6 +101,7 @@ public class BlockingCache implements Cache {
     Lock lock = getLockForKey(key);
     if (timeout > 0) {
       try {
+        // 带时间限制的tryLock()，拿不到lock，就等一段时间，超时返回false。比较聪明的做法。
         boolean acquired = lock.tryLock(timeout, TimeUnit.MILLISECONDS);
         if (!acquired) {
           throw new CacheException("Couldn't get a lock in " + timeout + " for the key " +  key + " at the cache " + delegate.getId());  
@@ -109,6 +110,7 @@ public class BlockingCache implements Cache {
         throw new CacheException("Got interrupted while trying to acquire lock for key " + key, e);
       }
     } else {
+      // 拿不到lock就不罢休，不然线程就一直block。 比较无赖的做法。
       lock.lock();
     }
   }
