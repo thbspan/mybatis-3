@@ -202,6 +202,10 @@ public class Jdbc3KeyGeneratorTest {
         Country country = new Country("China", "CN");
         mapper.insertMultiParams(country, Integer.valueOf(1));
         assertNotNull(country.getId());
+        System.out.println(country.getId());
+        country = new Country("China", "CN");
+        mapper.insertMultiParams(country, Integer.valueOf(1));
+        System.out.println(country.getId());
       } finally {
         sqlSession.rollback();
       }

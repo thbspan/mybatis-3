@@ -93,6 +93,8 @@ public class JdbcTransaction implements Transaction {
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + connection + "]");
       }
+      // 关闭连接
+      // connection.close()不意味着真的要销毁conn，而是要把conn放回连接池，供下一次使用，既然还要使用，自然就需要重置AutoCommit属性了
       connection.close();
     }
   }
@@ -114,6 +116,9 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
+  /**
+   * 重置连接为自动提交
+   */
   protected void resetAutoCommit() {
     try {
       if (!connection.getAutoCommit()) {

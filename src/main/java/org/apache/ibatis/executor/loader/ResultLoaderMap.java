@@ -42,6 +42,8 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
 /**
+ * ResultLoader 的映射。
+ * 该映射，最终创建代理对象时，会作为参数传入代理
  * @author Clinton Begin
  * @author Franta Mejta
  */
@@ -150,6 +152,7 @@ public class ResultLoaderMap {
       this.resultLoader = resultLoader;
 
       /* Save required information only if original object can be serialized. */
+      // metaResultObject封装的原始对象可以序列化
       if (metaResultObject != null && metaResultObject.getOriginalObject() instanceof Serializable) {
         final Object mappedStatementParameter = resultLoader.parameterObject;
 
@@ -171,6 +174,9 @@ public class ResultLoaderMap {
       }
     }
 
+    /**
+     * 执行结果加载
+     */
     public void load() throws SQLException {
       /* These field should not be null unless the loadpair was serialized.
        * Yet in that case this method should not be called. */
@@ -202,6 +208,7 @@ public class ResultLoaderMap {
         }
 
         this.metaResultObject = config.newMetaObject(userObject);
+        // 重新构造resultLoader对象
         this.resultLoader = new ResultLoader(config, new ClosedExecutor(), ms, this.mappedParameter,
                 metaResultObject.getSetterType(this.property), null, null);
       }
@@ -216,6 +223,7 @@ public class ResultLoaderMap {
                 old.parameterObject, old.targetType, old.cacheKey, old.boundSql);
       }
 
+      // 执行加载并设置值
       this.metaResultObject.setValue(property, this.resultLoader.loadResult());
     }
 

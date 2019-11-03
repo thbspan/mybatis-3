@@ -52,8 +52,14 @@ import org.apache.ibatis.type.JdbcType;
  * @author Kazuki Shimizu
  */
 public class XMLConfigBuilder extends BaseBuilder {
-
+  /**
+   * 是否已经解析
+   */
   private boolean parsed;
+
+  /**
+   * 基于Java xpath 解析器
+   */
   private final XPathParser parser;
   private String environment;
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
@@ -83,14 +89,19 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private XMLConfigBuilder(XPathParser parser, String environment, Properties props) {
+    // 创建Configuration对象
     super(new Configuration());
     ErrorContext.instance().resource("SQL Mapper Configuration");
+    // 设置configuration的variables属性
     this.configuration.setVariables(props);
     this.parsed = false;
     this.environment = environment;
     this.parser = parser;
   }
 
+  /**
+   * 解析方法
+   */
   public Configuration parse() {
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
@@ -100,19 +111,24 @@ public class XMLConfigBuilder extends BaseBuilder {
     return configuration;
   }
 
+  /**
+   * 解析根节点configuration标签
+   */
   private void parseConfiguration(XNode root) {
     try {
       //issue #117 read properties first
       propertiesElement(root.evalNode("*[local-name()='properties']"));
       Properties settings = settingsAsProperties(root.evalNode("*[local-name()='settings']"));
+      // 加载自定义VFS实现类
       loadCustomVfs(settings);
+      // 加载自定义日志实现
       loadCustomLogImpl(settings);
       typeAliasesElement(root.evalNode("*[local-name()='typeAliases']"));
       pluginElement(root.evalNode("*[local-name()='plugins']"));
       objectFactoryElement(root.evalNode("*[local-name()='objectFactory']"));
       objectWrapperFactoryElement(root.evalNode("*[local-name()='objectWrapperFactory']"));
       reflectorFactoryElement(root.evalNode("*[local-name()='reflectorFactory']"));
-      // 将setting值设置到configuration中
+      // 赋值<settings />到Configuration属性中
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
       environmentsElement(root.evalNode("*[local-name()='environments']"));
@@ -178,14 +194,18 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        // <package name="org.apache.ibatis.domain.jpetstore"/>
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
+          // <typeAlias alias="BlogAuthor" type="org.apache.ibatis.domain.blog.Author"/>
+          // <typeAlias type="org.apache.ibatis.domain.blog.Blog"/>
           String alias = child.getStringAttribute("alias");
           String type = child.getStringAttribute("type");
           try {
             Class<?> clazz = Resources.classForName(type);
+            // 注册到 typeAliasRegistry 中
             if (alias == null) {
               typeAliasRegistry.registerAlias(clazz);
             } else {
@@ -202,6 +222,9 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void pluginElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //<plugin interceptor="org.apache.ibatis.builder.ExamplePlugin">
+        //    <property name="pluginProperty" value="100"/>
+        //</plugin>
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).newInstance();
@@ -211,16 +234,27 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * <objectFactory type="org.apache.ibatis.builder.ExampleObjectFactory">
+   *     <property name="objectFactoryProperty" value="100"/>
+   *   </objectFactory>
+   */
   private void objectFactoryElement(XNode context) throws Exception {
     if (context != null) {
+      // 获得 ObjectFactory 的实现类
       String type = context.getStringAttribute("type");
       Properties properties = context.getChildrenAsProperties();
+      // <1> 创建 ObjectFactory 对象，并设置 Properties 属性
       ObjectFactory factory = (ObjectFactory) resolveClass(type).newInstance();
       factory.setProperties(properties);
+      // <2> 设置 Configuration 的 objectFactory 属性
       configuration.setObjectFactory(factory);
     }
   }
 
+  /**
+   * 解析<objectWrapperFactory type="org.apache.ibatis.builder.CustomObjectWrapperFactory" />
+   */
   private void objectWrapperFactoryElement(XNode context) throws Exception {
     if (context != null) {
       String type = context.getStringAttribute("type");
@@ -229,6 +263,9 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * <reflectorFactory type="org.apache.ibatis.builder.CustomReflectorFactory"/>
+   */
   private void reflectorFactoryElement(XNode context) throws Exception {
     if (context != null) {
        String type = context.getStringAttribute("type");
@@ -245,6 +282,7 @@ public class XMLConfigBuilder extends BaseBuilder {
    */
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
+      // 读取子标签property，转换成Properties对象
       Properties defaults = context.getChildrenAsProperties();
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
@@ -265,6 +303,9 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 赋值 <settings /> 到 Configuration 属性
+   */
   private void settingsElement(Properties props) {
     configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(props.getProperty("autoMappingBehavior", "PARTIAL")));
     configuration.setAutoMappingUnknownColumnBehavior(AutoMappingUnknownColumnBehavior.valueOf(props.getProperty("autoMappingUnknownColumnBehavior", "NONE")));
@@ -293,9 +334,25 @@ public class XMLConfigBuilder extends BaseBuilder {
     configuration.setConfigurationFactory(resolveClass(props.getProperty("configurationFactory")));
   }
 
+  /**
+   * <environments default="development">
+   *     <environment id="development">
+   *       <transactionManager type="JDBC">
+   *         <property name="" value=""/>
+   *       </transactionManager>
+   *       <dataSource type="UNPOOLED">
+   *         <property name="driver" value="${driver}"/>
+   *         <property name="url" value="${url}"/>
+   *         <property name="username" value="${username}"/>
+   *         <property name="password" value="${password}"/>
+   *       </dataSource>
+   *     </environment>
+   *   </environments>
+   */
   private void environmentsElement(XNode context) throws Exception {
     if (context != null) {
       if (environment == null) {
+        // <environments default="development">
         environment = context.getStringAttribute("default");
       }
       for (XNode child : context.getChildren()) {
@@ -313,6 +370,11 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   *   <databaseIdProvider type="DB_VENDOR">
+   *     <property name="Apache Derby" value="derby"/>
+   *   </databaseIdProvider>
+   */
   private void databaseIdProviderElement(XNode context) throws Exception {
     DatabaseIdProvider databaseIdProvider = null;
     if (context != null) {

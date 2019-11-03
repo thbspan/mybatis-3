@@ -55,6 +55,9 @@ public abstract class BaseBuilder {
     return configuration;
   }
 
+  /**
+   * 创建正则表达式
+   */
   protected Pattern parseExpression(String regex, String defaultValue) {
     return Pattern.compile(regex == null ? defaultValue : regex);
   }
@@ -91,6 +94,9 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   * 解析对应的ResultSetType类型
+   */
   protected ResultSetType resolveResultSetType(String alias) {
     if (alias == null) {
       return null;
@@ -114,18 +120,23 @@ public abstract class BaseBuilder {
   }
 
   protected Object createInstance(String alias) {
+    // 获取对应的类型
     Class<?> clazz = resolveClass(alias);
     if (clazz == null) {
       return null;
     }
     try {
-      // TODO ？重新获取一次
+      // 创建对象
+      // 重复获取一次？
       return resolveClass(alias).newInstance();
     } catch (Exception e) {
       throw new BuilderException("Error creating instance. Cause: " + e, e);
     }
   }
 
+  /**
+   * 根据别名获取类型
+   */
   protected <T> Class<? extends T> resolveClass(String alias) {
     if (alias == null) {
       return null;

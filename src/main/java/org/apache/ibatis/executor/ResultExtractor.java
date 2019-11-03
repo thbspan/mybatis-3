@@ -37,8 +37,10 @@ public class ResultExtractor {
   public Object extractObjectFromList(List<Object> list, Class<?> targetType) {
     Object value = null;
     if (targetType != null && targetType.isAssignableFrom(list.getClass())) {
+      // targetType和list.class一样的，targetType是list.class的父类或接口
       value = list;
     } else if (targetType != null && objectFactory.isCollection(targetType)) {
+      // targetType集合类型处理
       value = objectFactory.create(targetType);
       MetaObject metaObject = configuration.newMetaObject(value);
       metaObject.addAll(list);

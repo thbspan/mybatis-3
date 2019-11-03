@@ -35,6 +35,7 @@ import org.apache.ibatis.transaction.Transaction;
 import org.apache.ibatis.transaction.TransactionFactory;
 
 /**
+ * 延迟结果加载器
  * @author Clinton Begin
  */
 public class ResultLoader {
@@ -42,15 +43,29 @@ public class ResultLoader {
   protected final Configuration configuration;
   protected final Executor executor;
   protected final MappedStatement mappedStatement;
+  /**
+   * 查询的参数对象
+   */
   protected final Object parameterObject;
+  /**
+   * 结果的类型
+   */
   protected final Class<?> targetType;
   protected final ObjectFactory objectFactory;
   protected final CacheKey cacheKey;
   protected final BoundSql boundSql;
   protected final ResultExtractor resultExtractor;
+  /**
+   * 创建 ResultLoader 对象时，线程ID
+   */
   protected final long creatorThreadId;
-  
+  /**
+   * 是否已经加载
+   */
   protected boolean loaded;
+  /**
+   * 查询的结果对象
+   */
   protected Object resultObject;
   
   public ResultLoader(Configuration config, Executor executor, MappedStatement mappedStatement, Object parameterObject, Class<?> targetType, CacheKey cacheKey, BoundSql boundSql) {

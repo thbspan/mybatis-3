@@ -60,6 +60,8 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
 
   public void processBatch(MappedStatement ms, Statement stmt, Object parameter) {
     // 获取主键的属性参数
+    // <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">SELECT LAST_INSERT_ID() AS ID </selectKey>
+    // keyProperties数组通过keyProperty属性的值按，拆分得到
     final String[] keyProperties = ms.getKeyProperties();
     if (keyProperties == null || keyProperties.length == 0) {
       return;

@@ -26,7 +26,6 @@ import org.apache.ibatis.transaction.Transaction;
 
 /**
  * 基于容器管理的事务类
- *
  * 和jdbcTemplate相比，少了autocommit属性。空实现#commit和#rollback方法。因此，事务的管理交给了容器
  * {@link Transaction} that lets the container manage the full lifecycle of the transaction.
  * Delays connection retrieval until getConnection() is called.
@@ -42,6 +41,9 @@ public class ManagedTransaction implements Transaction {
   private static final Log log = LogFactory.getLog(ManagedTransaction.class);
 
   private DataSource dataSource;
+  /**
+   * 事务隔离级别
+   */
   private TransactionIsolationLevel level;
   private Connection connection;
   private final boolean closeConnection;

@@ -45,6 +45,9 @@ import org.apache.ibatis.session.Configuration;
 public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.ProxyFactory {
 
   private static final String FINALIZE_METHOD = "finalize";
+  /**
+   * 序列化相关方法，实际序列化的对象将是作为writeReplace方法返回值的对象
+   */
   private static final String WRITE_REPLACE_METHOD = "writeReplace";
 
   public JavassistProxyFactory() {

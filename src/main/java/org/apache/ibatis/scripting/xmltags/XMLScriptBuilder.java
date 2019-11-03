@@ -35,6 +35,9 @@ import org.w3c.dom.NodeList;
 public class XMLScriptBuilder extends BaseBuilder {
 
   private final XNode context;
+  /**
+   * 是否是动态SQL，语句总包含${}或者包含子标签<where></where> <if></if> <set></set> <choosen></choosen>之类的
+   */
   private boolean isDynamic;
   private final Class<?> parameterType;
   private final Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
@@ -56,6 +59,7 @@ public class XMLScriptBuilder extends BaseBuilder {
     nodeHandlerMap.put("where", new WhereHandler());
     nodeHandlerMap.put("set", new SetHandler());
     nodeHandlerMap.put("foreach", new ForEachHandler());
+    // if 和 when注册的处理类相同
     nodeHandlerMap.put("if", new IfHandler());
     nodeHandlerMap.put("choose", new ChooseHandler());
     nodeHandlerMap.put("when", new IfHandler());
@@ -63,9 +67,12 @@ public class XMLScriptBuilder extends BaseBuilder {
     nodeHandlerMap.put("bind", new BindHandler());
   }
 
+  /**
+   * 将SQL解析成SqlSource对象
+   */
   public SqlSource parseScriptNode() {
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
-    SqlSource sqlSource = null;
+    SqlSource sqlSource;
     if (isDynamic) {
       sqlSource = new DynamicSqlSource(configuration, rootSqlNode);
     } else {
@@ -75,7 +82,9 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   protected MixedSqlNode parseDynamicTags(XNode node) {
+    // 创建sqlNode数组
     List<SqlNode> contents = new ArrayList<>();
+    // node children <select />内部节点
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       XNode child = node.newXNode(children.item(i));
@@ -90,16 +99,18 @@ public class XMLScriptBuilder extends BaseBuilder {
           contents.add(new StaticTextSqlNode(data));
         }
       } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
-        // 处理标签节点
+        // element 节点
         String nodeName = child.getNode().getNodeName();
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
         }
+        // handler handle child and put result into "contents"
         handler.handleNode(child, contents);
         isDynamic = true;
       }
     }
+    // return sql node list
     return new MixedSqlNode(contents);
   }
 
@@ -108,7 +119,12 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   /**
+<<<<<<< Updated upstream
    * <bind />bind节点处理
+=======
+   * <bind></bind>标签可以使用OGNL表达式创建一个变量并且绑定到上下文中
+   *
+>>>>>>> Stashed changes
    */
   private class BindHandler implements NodeHandler {
     public BindHandler() {

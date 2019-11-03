@@ -24,7 +24,7 @@ public enum LocalCacheScope {
    */
   SESSION,
   /**
-   * 语句级
+   * SQL语句级别
    */
   STATEMENT
 }

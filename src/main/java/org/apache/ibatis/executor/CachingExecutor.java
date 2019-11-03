@@ -90,6 +90,7 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> Cursor<E> queryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds) throws SQLException {
     flushCacheIfRequired(ms);
+    // 无法开启缓存，直接调用delegate对应的方法
     return delegate.queryCursor(ms, parameter, rowBounds);
   }
 
@@ -97,9 +98,13 @@ public class CachingExecutor implements Executor {
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
     Cache cache = ms.getCache();
+    // 判断二级缓存是否存在
     if (cache != null) {
+      // <select flushCache="true">
       flushCacheIfRequired(ms);
+      // <select useCache="false"> 可以关闭缓存
       if (ms.isUseCache() && resultHandler == null) {
+        // 存储过程相关
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")
         List<E> list = (List<E>) tcm.getObject(cache, key);

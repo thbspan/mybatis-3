@@ -43,7 +43,7 @@ public class CommonPropertyLazyLoadError {
     public void testLazyLoadWithNoAncestor() {
         try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
             ChildMapper childMapper = sqlSession.getMapper(ChildMapper.class);
-            
+
             childMapper.selectById(1);
         }
     }

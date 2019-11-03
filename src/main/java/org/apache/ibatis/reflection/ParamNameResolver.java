@@ -121,6 +121,9 @@ public class ParamNameResolver {
    * @return 参数名称 -> 实参
    */
   public Object getNamedParams(Object[] args) {
+    // aMethod(@Param("M") int a, @Param("N") int b) -> {{0, "M"}, {1, "N"}}
+    // aMethod(int a, int b) -> {{0, "0"}, {1, "1"}}
+    // aMethod(int a, RowBounds rb, int b) -> {{0, "0"}, {2, "1"}}
     final int paramCount = names.size();
     if (args == null || paramCount == 0) {
       return null;

@@ -70,11 +70,19 @@ public class TypeHandlerTest {
   @Test
   public void shouldApplyTypeHandlerOnGeneratedKey() {
     addMapper();
-    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+    // try-resource语法 自动关闭sqlSession
+    try (SqlSession sqlSession = sqlSessionFactory.openSession(false)) {
       Mapper mapper = sqlSession.getMapper(Mapper.class);
       Product product = new Product();
       product.setName("new product");
       mapper.insertProduct(product);
+      System.out.println(mapper.getProductByName("new product").getId().getValue());
+      sqlSession.commit();
+      product = new Product();
+      product.setName("new product 2");
+      mapper.insertProduct(product);
+//      sqlSession.commit();
+      System.out.println(mapper.getProductByName("new product 2").getId().getValue());
       assertNotNull(product.getId());
       assertNotNull(product.getId().getValue());
     }

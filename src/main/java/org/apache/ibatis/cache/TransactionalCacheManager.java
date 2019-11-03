@@ -21,7 +21,7 @@ import java.util.Map;
 import org.apache.ibatis.cache.decorators.TransactionalCache;
 
 /**
- * 支持事务的Cache Manager
+ * 支持事务的缓存管理器
  * @author Clinton Begin
  */
 public class TransactionalCacheManager {
@@ -44,6 +44,7 @@ public class TransactionalCacheManager {
   }
 
   public void commit() {
+    // 提交所有的TransactionalCache
     for (TransactionalCache txCache : transactionalCaches.values()) {
       txCache.commit();
     }

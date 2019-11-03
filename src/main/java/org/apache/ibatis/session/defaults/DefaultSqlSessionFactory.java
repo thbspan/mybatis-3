@@ -87,6 +87,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     return configuration;
   }
 
+  @SuppressWarnings("Duplicates")
   private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
     Transaction tx = null;
     try {
@@ -103,6 +104,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     }
   }
 
+  @SuppressWarnings("Duplicates")
   private SqlSession openSessionFromConnection(ExecutorType execType, Connection connection) {
     try {
       boolean autoCommit;

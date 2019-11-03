@@ -45,6 +45,7 @@ import org.apache.ibatis.transaction.Transaction;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * 永久的缓存
  * @author Clinton Begin
  */
 public abstract class BaseExecutor implements Executor {
@@ -55,11 +56,23 @@ public abstract class BaseExecutor implements Executor {
   protected Executor wrapper;
 
   protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
+  /**
+   * 本地缓存（一级缓存）
+   */
   protected PerpetualCache localCache;
+  /**
+   * 本地输出类型的参数的缓存
+   */
   protected PerpetualCache localOutputParameterCache;
   protected Configuration configuration;
 
+  /**
+   * 记录嵌套查询的层级
+   */
   protected int queryStack;
+  /**
+   * 是否关闭
+   */
   private boolean closed;
 
   protected BaseExecutor(Configuration configuration, Transaction transaction) {
@@ -73,6 +86,9 @@ public abstract class BaseExecutor implements Executor {
     this.wrapper = this;
   }
 
+  /**
+   * 获取事务对象
+   */
   @Override
   public Transaction getTransaction() {
     if (closed) {
@@ -154,6 +170,7 @@ public abstract class BaseExecutor implements Executor {
       // resultHandler == null 先从本地缓存中查找
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
+        // 处理存储过程
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
         // 从数据库查询
@@ -169,6 +186,7 @@ public abstract class BaseExecutor implements Executor {
       }
       // issue #601
       deferredLoads.clear();
+
       // 如果缓存级别是 LocalCacheScope.STATEMENT（语句级） （默认SESSION会话级），则进行清理
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
         // issue #482
@@ -197,6 +215,9 @@ public abstract class BaseExecutor implements Executor {
     }
   }
 
+  /**
+   * 创建CacheKey缓存对象
+   */
   @Override
   public CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql) {
     if (closed) {

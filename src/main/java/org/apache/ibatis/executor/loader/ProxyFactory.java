@@ -22,12 +22,23 @@ import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * 代理工厂接口，用于创建需要延迟加载属性的结果对象
  * @author Eduardo Macarron
  */
 public interface ProxyFactory {
 
   void setProperties(Properties properties);
 
+  /**
+   * 创建代理对象
+   * @param target 被代理的对象
+   * @param lazyLoader ResultLoader对象的集合（映射）
+   * @param configuration 配置对象
+   * @param objectFactory object factory 创建object 的工厂
+   * @param constructorArgTypes 构造函数参数类型列表
+   * @param constructorArgs 构造函数参数列表
+   * @return 创建的代理对象
+   */
   Object createProxy(Object target, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs);
   
 }

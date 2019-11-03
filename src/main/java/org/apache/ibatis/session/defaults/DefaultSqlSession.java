@@ -193,6 +193,7 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public int update(String statement, Object parameter) {
     try {
+      // <1> 标记 dirty ，表示执行过写操作; 该参数，会在事务的提交和回滚，产生其用途
       dirty = true;
       MappedStatement ms = configuration.getMappedStatement(statement);
       return executor.update(ms, wrapCollection(parameter));
@@ -313,10 +314,18 @@ public class DefaultSqlSession implements SqlSession {
     cursorList.add(cursor);
   }
 
+  /**
+   * 有两种情况需要触发：
+   *     1）未开启自动提交，并且数据发生写操作
+   *     2）强制提交
+   */
   private boolean isCommitOrRollbackRequired(boolean force) {
     return (!autoCommit && dirty) || force;
   }
 
+  /**
+   * 若参数 object 是 Collection、Array、Map 参数类型的情况下，包装成 Map 返回
+   */
   private Object wrapCollection(final Object object) {
     if (object instanceof Collection) {
       StrictMap<Object> map = new StrictMap<>();

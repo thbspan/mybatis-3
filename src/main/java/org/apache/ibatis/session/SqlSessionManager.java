@@ -30,17 +30,23 @@ import org.apache.ibatis.executor.BatchResult;
 import org.apache.ibatis.reflection.ExceptionUtil;
 
 /**
+ * 实现SqlSessionFactory、SqlSession 接口，SqlSession 管理器
+ *
+ * SqlSessionManager 是 SqlSessionFactory 和 SqlSession 的职能相加
  * @author Larry Meadors
  */
 public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
   private final SqlSessionFactory sqlSessionFactory;
   private final SqlSession sqlSessionProxy;
-
+  /**
+   * 线程本地变量，当前线程的SqlSession对象
+   */
   private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>();
 
   private SqlSessionManager(SqlSessionFactory sqlSessionFactory) {
     this.sqlSessionFactory = sqlSessionFactory;
+    // 创建SqlSession代理对象
     this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(
         SqlSessionFactory.class.getClassLoader(),
         new Class[]{SqlSession.class},

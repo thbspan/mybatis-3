@@ -28,6 +28,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 执行器接口
  * @author Clinton Begin
  */
 public interface Executor {
@@ -44,20 +45,41 @@ public interface Executor {
 
   List<BatchResult> flushStatements() throws SQLException;
 
+  /**
+   * 提交事务
+   * @param required 是否要求提交事务
+   */
   void commit(boolean required) throws SQLException;
 
+  /**
+   * 回滚事务
+   * @param required 事务要求回滚事务
+   */
   void rollback(boolean required) throws SQLException;
 
   CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql);
 
+  /**
+   * 判断是否缓存
+   */
   boolean isCached(MappedStatement ms, CacheKey key);
 
+  /**
+   * 清除本地缓存
+   */
   void clearLocalCache();
 
+  /**
+   * 延迟加载
+   */
   void deferLoad(MappedStatement ms, MetaObject resultObject, String property, CacheKey key, Class<?> targetType);
 
   Transaction getTransaction();
 
+  /**
+   * 关闭执行器
+   * @param forceRollback 是否强制回滚
+   */
   void close(boolean forceRollback);
 
   boolean isClosed();

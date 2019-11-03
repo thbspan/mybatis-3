@@ -36,11 +36,15 @@ public class DynamicContext {
 
   static {
     // 设置ognl属性访问器
+    // set ognl runtime property accessor
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
 
+  // inner class extends HashMap
   private final ContextMap bindings;
+  // 最后生成的sql
   private final StringBuilder sqlBuilder = new StringBuilder();
+  // 在ForEachHandler中使用
   private int uniqueNumber = 0;
 
   public DynamicContext(Configuration configuration, Object parameterObject) {
