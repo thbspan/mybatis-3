@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ public abstract class BaseWrapper implements ObjectWrapper {
   }
 
   protected Object resolveCollection(PropertyTokenizer prop, Object object) {
+    // 判断属性名称是否为空
     if ("".equals(prop.getName())) {
       return object;
     } else {
@@ -44,12 +45,14 @@ public abstract class BaseWrapper implements ObjectWrapper {
 
   protected Object getCollectionValue(PropertyTokenizer prop, Object collection) {
     if (collection instanceof Map) {
+      // a[b]
       return ((Map) collection).get(prop.getIndex());
     } else {
       int i = Integer.parseInt(prop.getIndex());
       if (collection instanceof List) {
         return ((List) collection).get(i);
       } else if (collection instanceof Object[]) {
+        // Integer[] String[] ...
         return ((Object[]) collection)[i];
       } else if (collection instanceof char[]) {
         return ((char[]) collection)[i];

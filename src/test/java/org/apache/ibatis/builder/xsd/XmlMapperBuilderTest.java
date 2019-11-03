@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.apache.ibatis.builder.xsd;
 
+import org.apache.ibatis.builder.annotation.MapperAnnotationBuilder;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -24,6 +25,7 @@ import org.apache.ibatis.parsing.XPathParser;
 import org.apache.ibatis.session.Configuration;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -52,4 +54,23 @@ public class XmlMapperBuilderTest {
     }
   }
 
+  @Test
+  public void mappedAnnotation() throws Exception {
+    Configuration configuration = new Configuration();
+    MapperAnnotationBuilder builder = new MapperAnnotationBuilder(configuration, AnnotationMapper.class);
+
+    builder.parse();
+  }
+
+  @Test
+  public void xmlScriptBuilderTest() throws IOException {
+    Configuration configuration = new Configuration();
+    String resource = "org/apache/ibatis/builder/xsd/TestMapper.xml";
+    try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
+      XMLMapperBuilder builder = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
+      builder.parse();
+    } finally {
+      System.clearProperty(XPathParser.KEY_USE_XSD);
+    }
+  }
 }

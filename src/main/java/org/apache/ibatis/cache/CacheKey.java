@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,9 +33,21 @@ public class CacheKey implements Cloneable, Serializable {
   private static final int DEFAULT_MULTIPLYER = 37;
   private static final int DEFAULT_HASHCODE = 17;
 
+  /**
+   * hashcode求值系数
+   */
   private final int multiplier;
+  /**
+   * 缓存的hashcode
+   */
   private int hashcode;
+  /**
+   * 校验和
+   */
   private long checksum;
+  /**
+   * org.apache.ibatis.cache.CacheKey#update(java.lang.Object)调用次数
+   */
   private int count;
   // 8/21/2017 - Sonarlint flags this as needing to be marked transient.  While true if content is not serializable, this is not always true and thus should not be marked transient.
   private List<Object> updateList;
@@ -74,6 +86,9 @@ public class CacheKey implements Cloneable, Serializable {
     }
   }
 
+  /**
+   * 判断对象是否相等
+   */
   @Override
   public boolean equals(Object object) {
     if (this == object) {

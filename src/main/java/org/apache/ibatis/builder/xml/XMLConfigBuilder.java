@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.type.JdbcType;
 
 /**
+ * 负责解析mybatis-config配置文件
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
@@ -111,17 +112,27 @@ public class XMLConfigBuilder extends BaseBuilder {
       objectFactoryElement(root.evalNode("*[local-name()='objectFactory']"));
       objectWrapperFactoryElement(root.evalNode("*[local-name()='objectWrapperFactory']"));
       reflectorFactoryElement(root.evalNode("*[local-name()='reflectorFactory']"));
+      // 将setting值设置到configuration中
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
       environmentsElement(root.evalNode("*[local-name()='environments']"));
       databaseIdProviderElement(root.evalNode("*[local-name()='databaseIdProvider']"));
       typeHandlerElement(root.evalNode("*[local-name()='typeHandlers']"));
+      // 解析mappers映射文件
       mapperElement(root.evalNode("*[local-name()='mappers']"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
     }
   }
 
+  /**
+   * <settings>
+   *     <setting name="autoMappingBehavior" value="NONE"/>
+   *     <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+   *     <setting name="cacheEnabled" value="false"/>
+   *     <setting name="proxyFactory" value="CGLIB"/>
+   *   </settings>
+   */
   private Properties settingsAsProperties(XNode context) {
     if (context == null) {
       return new Properties();
@@ -156,6 +167,14 @@ public class XMLConfigBuilder extends BaseBuilder {
     configuration.setLogImpl(logImpl);
   }
 
+  /**
+   *   <typeAliases>
+   *     <typeAlias alias="BlogAuthor" type="org.apache.ibatis.domain.blog.Author"/>
+   *     <typeAlias type="org.apache.ibatis.domain.blog.Blog"/>
+   *     <typeAlias type="org.apache.ibatis.domain.blog.Post"/>
+   *     <package name="org.apache.ibatis.domain.jpetstore"/>
+   *   </typeAliases>
+   */
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
@@ -218,6 +237,12 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * <properties resource="org/apache/ibatis/builder/jdbc.properties">
+   *    <property name="prop1" value="aaaa"/>
+   *    <property name="jdbcTypeForNull" value="NULL" />
+   *  </properties>
+   */
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
       Properties defaults = context.getChildrenAsProperties();
@@ -356,6 +381,17 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * <mappers>
+   *     <mapper resource="org/apache/ibatis/builder/BlogMapper.xml"/>
+   *
+   *     <mapper url="file:./src/test/java/org/apache/ibatis/builder/NestedBlogMapper.xml"/>
+   *
+   *     <mapper class="org.apache.ibatis.builder.CachedAuthorMapper"/>
+   *
+   *     <package name="org.apache.ibatis.builder.mapper"/>
+   *   </mappers>
+   */
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {

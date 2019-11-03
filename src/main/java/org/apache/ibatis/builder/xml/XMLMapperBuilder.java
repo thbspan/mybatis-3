@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -55,6 +55,9 @@ import org.apache.ibatis.type.TypeHandler;
 public class XMLMapperBuilder extends BaseBuilder {
 
   private final XPathParser parser;
+  /**
+   * XMLMapperBuilder和MapperAnnotationBuilder的工具类，提供公共的方法
+   */
   private final MapperBuilderAssistant builderAssistant;
   private final Map<String, XNode> sqlFragments;
   private final String resource;
@@ -90,8 +93,11 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   public void parse() {
+    // 判断当前Mapper是否已经加载过
     if (!configuration.isResourceLoaded(resource)) {
+      // 解析mapper节点
       configurationElement(parser.evalNode("*[local-name()='mapper']"));
+      // 标记当前Mapper已经加载了
       configuration.addLoadedResource(resource);
       bindMapperForNamespace();
     }
@@ -105,12 +111,18 @@ public class XMLMapperBuilder extends BaseBuilder {
     return sqlFragments.get(refid);
   }
 
+  /**
+   * 解析Mapper文件
+   * <mapper namespace="org.apache.ibatis.domain.blog.mappers.BlogMapper">
+   */
   private void configurationElement(XNode context) {
     try {
+      // <mapper namespace="org.apache.ibatis.domain.blog.mappers.BlogMapper">
       String namespace = context.getStringAttribute("namespace");
       if (namespace == null || namespace.equals("")) {
         throw new BuilderException("Mapper's namespace cannot be empty");
       }
+      // 设置namespace
       builderAssistant.setCurrentNamespace(namespace);
       cacheRefElement(context.evalNode("*[local-name()='cache-ref']"));
       cacheElement(context.evalNode("*[local-name()='cache']"));
@@ -123,6 +135,9 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析select insert delete update语句
+   */
   private void buildStatementFromContext(List<XNode> list) {
     if (configuration.getDatabaseId() != null) {
       buildStatementFromContext(list, configuration.getDatabaseId());
@@ -186,8 +201,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * <cache-ref namespace="org.apache.ibatis.domain.blog.mappers.AuthorMapper"/>
+   */
   private void cacheRefElement(XNode context) {
     if (context != null) {
+      // 解析 namespace="org.apache.ibatis.domain.blog.mappers.AuthorMapper" 属性
       configuration.addCacheRef(builderAssistant.getCurrentNamespace(), context.getStringAttribute("namespace"));
       CacheRefResolver cacheRefResolver = new CacheRefResolver(builderAssistant, context.getStringAttribute("namespace"));
       try {
@@ -198,22 +217,39 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
-  private void cacheElement(XNode context) {
+  /**
+   *
+   * <cache eviction="FIFO" flushInterval="60000" size="512" readOnly="true"/>
+   *
+   * type:自定义缓存实现类，实现 org.mybatis.cache.Cache接口
+   * eviction：回收策略
+   * <cache type="com.domain.something.MyCustomCache">
+   *   <!-- 设置属性值 -->
+   *   <property name="cacheFile" value="/tmp/my-custom-cache.tmp"/>
+   * </cache>
+   */
+  private void cacheElement(XNode context) throws Exception {
     if (context != null) {
+      // org.apache.ibatis.session.Configuration.Configuration()构造函数中有添加PERPETUAL对应的类
       String type = context.getStringAttribute("type", "PERPETUAL");
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
+      // LRU通用也是定义在Configuration()构造函数中
       String eviction = context.getStringAttribute("eviction", "LRU");
       Class<? extends Cache> evictionClass = typeAliasRegistry.resolveAlias(eviction);
       Long flushInterval = context.getLongAttribute("flushInterval");
       Integer size = context.getIntAttribute("size");
       boolean readWrite = !context.getBooleanAttribute("readOnly", false);
       boolean blocking = context.getBooleanAttribute("blocking", false);
+      // 获取子property属性信息
       Properties props = context.getChildrenAsProperties();
       builderAssistant.useNewCache(typeClass, evictionClass, flushInterval, size, readWrite, blocking, props);
     }
   }
 
-  private void parameterMapElement(List<XNode> list) {
+  /**
+   * parameterMap 配置已经废弃了
+   */
+  private void parameterMapElement(List<XNode> list) throws Exception {
     for (XNode parameterMapNode : list) {
       String id = parameterMapNode.getStringAttribute("id");
       String type = parameterMapNode.getStringAttribute("type");
@@ -253,16 +289,31 @@ public class XMLMapperBuilder extends BaseBuilder {
     return resultMapElement(resultMapNode, Collections.<ResultMapping> emptyList(), null);
   }
 
+  /**
+   * <resultMap id="joinedAuthor" type="org.apache.ibatis.domain.blog.Author">
+   *     <id property="id" column="author_id"/>
+   *     <result property="username" column="author_username" javaType="string" jdbcType="varchar"/>
+   *     <association property="role" javaType="com.queen.mybatis.bean.Role" resultMap="xxxId">
+   *         <id column="role_id" property="id"/>
+   *         <result column="roleName" property="roleName"/>
+   *     </association>
+   *     <collection property="scores" ofType="Score" column="id"  select="queryScoresBySID" notNullColumn="" columnPrefix="" foreignColumn="" />
+   *   </resultMap>
+   */
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings, Class<?> enclosingType) throws Exception {
+    // resultMapNode.getValueBasedIdentifier() mapper_resultMap[joinedAuthor]
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
-    String id = resultMapNode.getStringAttribute("id",
-        resultMapNode.getValueBasedIdentifier());
+    String id = resultMapNode.getStringAttribute("id", resultMapNode.getValueBasedIdentifier());
+    // 优先级 type > ofType > resultType > javaType
     String type = resultMapNode.getStringAttribute("type",
         resultMapNode.getStringAttribute("ofType",
             resultMapNode.getStringAttribute("resultType",
                 resultMapNode.getStringAttribute("javaType"))));
+    // 继承关系
     String extend = resultMapNode.getStringAttribute("extends");
+    // 自动映射：即自动查询与列名同名的属性名称，并且调用set方法；而设置为false后，需要配置明确的映射关系才会调用set方法
     Boolean autoMapping = resultMapNode.getBooleanAttribute("autoMapping");
+    // 解析type类型
     Class<?> typeClass = resolveClass(type);
     if (typeClass == null) {
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);
@@ -271,12 +322,15 @@ public class XMLMapperBuilder extends BaseBuilder {
     List<ResultMapping> resultMappings = new ArrayList<>();
     resultMappings.addAll(additionalResultMappings);
     List<XNode> resultChildren = resultMapNode.getChildren();
+    // 遍历<resultMap>的子节点
     for (XNode resultChild : resultChildren) {
       if ("constructor".equals(resultChild.getName())) {
+        // 处理<constructor>节点
         processConstructorElement(resultChild, typeClass, resultMappings);
       } else if ("discriminator".equals(resultChild.getName())) {
         discriminator = processDiscriminatorElement(resultChild, typeClass, resultMappings);
       } else {
+        // 处理<id> <result> <association> <collection>等等节点信息
         List<ResultFlag> flags = new ArrayList<>();
         if ("id".equals(resultChild.getName())) {
           flags.add(ResultFlag.ID);
@@ -318,12 +372,18 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * <discriminator javaType="int" column="draft">
+   *   <case value="1" resultMap="draftPost"/>
+   * </discriminator>
+   */
   private Discriminator processDiscriminatorElement(XNode context, Class<?> resultType, List<ResultMapping> resultMappings) throws Exception {
     String column = context.getStringAttribute("column");
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
     String typeHandler = context.getStringAttribute("typeHandler");
     Class<?> javaTypeClass = resolveClass(javaType);
+    @SuppressWarnings("unchecked")
     Class<? extends TypeHandler<?>> typeHandlerClass = resolveClass(typeHandler);
     JdbcType jdbcTypeEnum = resolveJdbcType(jdbcType);
     Map<String, String> discriminatorMap = new HashMap<>();
@@ -335,17 +395,21 @@ public class XMLMapperBuilder extends BaseBuilder {
     return builderAssistant.buildDiscriminator(resultType, column, javaTypeClass, jdbcTypeEnum, typeHandlerClass, discriminatorMap);
   }
 
-  private void sqlElement(List<XNode> list) {
+  private void sqlElement(List<XNode> list) throws Exception{
     if (configuration.getDatabaseId() != null) {
       sqlElement(list, configuration.getDatabaseId());
     }
     sqlElement(list, null);
   }
 
-  private void sqlElement(List<XNode> list, String requiredDatabaseId) {
+  /**
+   * <sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql>
+   */
+  private void sqlElement(List<XNode> list, String requiredDatabaseId) throws Exception {
     for (XNode context : list) {
       String databaseId = context.getStringAttribute("databaseId");
       String id = context.getStringAttribute("id");
+      // 添加namespace.前缀
       id = builderAssistant.applyCurrentNamespace(id, false);
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
         sqlFragments.put(id, context);
@@ -359,6 +423,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         return false;
       }
     } else {
+      // requiredDatabaseId == null
       if (databaseId != null) {
         return false;
       }
@@ -383,13 +448,19 @@ public class XMLMapperBuilder extends BaseBuilder {
     String column = context.getStringAttribute("column");
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
+    // association/collection子元素包含select属性，嵌套子查询
+    // <association property="author" column="author_id" select="org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAuthorWithInlineParams" fetchType="lazy"/>
+    // <collection property="posts" column="id" select="selectPostsForBlog" fetchType="lazy"/>
     String nestedSelect = context.getStringAttribute("select");
     String nestedResultMap = context.getStringAttribute("resultMap",
         processNestedResultMappings(context, Collections.<ResultMapping> emptyList(), resultType));
+    // 同上association/collection的属性
     String notNullColumn = context.getStringAttribute("notNullColumn");
     String columnPrefix = context.getStringAttribute("columnPrefix");
+
     String typeHandler = context.getStringAttribute("typeHandler");
     String resultSet = context.getStringAttribute("resultSet");
+    // 感觉用到的很少
     String foreignColumn = context.getStringAttribute("foreignColumn");
     boolean lazy = "lazy".equals(context.getStringAttribute("fetchType", configuration.isLazyLoadingEnabled() ? "lazy" : "eager"));
     Class<?> javaTypeClass = resolveClass(javaType);

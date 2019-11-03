@@ -28,7 +28,7 @@ import java.util.HashMap;
  * attributes = (',' attribute)*
  * attribute = name '=' value
  * </pre>
- *
+ * 0x20 32 ：代表空格字符
  * @author Frank D. Martinez [mnesarco]
  */
 public class ParameterExpression extends HashMap<String, String> {

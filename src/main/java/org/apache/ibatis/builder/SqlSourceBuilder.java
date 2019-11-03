@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
 
 /**
+ * SqlSource 构造器
  * @author Clinton Begin
  */
 public class SqlSourceBuilder extends BaseBuilder {
@@ -40,9 +41,11 @@ public class SqlSourceBuilder extends BaseBuilder {
   }
 
   public SqlSource parse(String originalSql, Class<?> parameterType, Map<String, Object> additionalParameters) {
+    //  将匹配到的#{}替换成?
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
     String sql = parser.parse(originalSql);
+    // 将#{}替换后返回?的sql，然后构造StaticSqlSource
     return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
   }
 
@@ -50,6 +53,9 @@ public class SqlSourceBuilder extends BaseBuilder {
 
     private List<ParameterMapping> parameterMappings = new ArrayList<>();
     private Class<?> parameterType;
+    /**
+     * additionalParameters MetaObject
+     */
     private MetaObject metaParameters;
 
     public ParameterMappingTokenHandler(Configuration configuration, Class<?> parameterType, Map<String, Object> additionalParameters) {
@@ -62,6 +68,12 @@ public class SqlSourceBuilder extends BaseBuilder {
       return parameterMappings;
     }
 
+    /**
+     * #{id}
+     * #{property,javaType=int,jdbcType=NUMERIC}
+     * 根据content返回需要最终结果
+     * content = id | property,javaType=int,jdbcType=NUMERIC
+     */
     @Override
     public String handleToken(String content) {
       parameterMappings.add(buildParameterMapping(content));
@@ -69,8 +81,11 @@ public class SqlSourceBuilder extends BaseBuilder {
     }
 
     private ParameterMapping buildParameterMapping(String content) {
+      // 解析成Map集合，map格式可以参考ParameterExpression注释和测试类
       Map<String, String> propertiesMap = parseParameterMapping(content);
+      // 获取属性名称
       String property = propertiesMap.get("property");
+      // 获取属性类型
       Class<?> propertyType;
       if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
         propertyType = metaParameters.getGetterType(property);
@@ -123,6 +138,12 @@ public class SqlSourceBuilder extends BaseBuilder {
       return builder.build();
     }
 
+    /**
+     * content =
+     * #{id}
+     * #{property,javaType=int,jdbcType=NUMERIC}
+     * #{age,javaType=int,jdbcType=NUMERIC,typeHandler=MyTypeHandler}
+     */
     private Map<String, String> parseParameterMapping(String content) {
       try {
         return new ParameterExpression(content);

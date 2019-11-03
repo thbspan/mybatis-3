@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
+/**
+ * 参数名解析类
+ */
 public class ParamNameResolver {
 
   private static final String GENERIC_NAME_PREFIX = "param";
@@ -44,9 +47,15 @@ public class ParamNameResolver {
    * <li>aMethod(int a, int b) -&gt; {{0, "0"}, {1, "1"}}</li>
    * <li>aMethod(int a, RowBounds rb, int b) -&gt; {{0, "0"}, {2, "1"}}</li>
    * </ul>
+   * 位置索引->参数名称
+   *  (通过注解信息获取，没有注解信息，则参数索引作为其名称，但是 RowBounds 和 ResultHandler参数类型不会被记录，这就会导致索引和参数名称不一致)
+   *  (可以参考上面的英文注释)
    */
   private final SortedMap<Integer, String> names;
 
+  /**
+   * 是否有Param注解
+   */
   private boolean hasParamAnnotation;
 
   public ParamNameResolver(Configuration config, Method method) {
@@ -76,6 +85,7 @@ public class ParamNameResolver {
         if (name == null) {
           // use the parameter index as the name ("0", "1", ...)
           // gcode issue #71
+          // 使用map.size()做为名称
           name = String.valueOf(map.size());
         }
       }
@@ -106,6 +116,9 @@ public class ParamNameResolver {
    * In addition to the default names, this method also adds the generic names (param1, param2,
    * ...).
    * </p>
+   * 将参数名称和实参关联
+   * @param args 用户传入的实参列表
+   * @return 参数名称 -> 实参
    */
   public Object getNamedParams(Object[] args) {
     final int paramCount = names.size();

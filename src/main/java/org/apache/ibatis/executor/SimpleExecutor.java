@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -59,8 +59,9 @@ public class SimpleExecutor extends BaseExecutor {
     try {
       Configuration configuration = ms.getConfiguration();
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      // 初始化statement
       stmt = prepareStatement(handler, ms.getStatementLog());
-      return handler.query(stmt, resultHandler);
+      return handler.<E>query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
     }
@@ -72,11 +73,13 @@ public class SimpleExecutor extends BaseExecutor {
     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
     Statement stmt = prepareStatement(handler, ms.getStatementLog());
     stmt.closeOnCompletion();
-    return handler.queryCursor(stmt);
+
+    return handler.<E>queryCursor(stmt);
   }
 
   @Override
-  public List<BatchResult> doFlushStatements(boolean isRollback) {
+  public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
+    // 不存在批量操作的情况，直接返回空list
     return Collections.emptyList();
   }
 

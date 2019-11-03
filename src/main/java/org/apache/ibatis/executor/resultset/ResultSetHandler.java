@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2015 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.sql.Statement;
 import java.util.List;
 
 /**
+ * ResultSet 处理类
  * @author Clinton Begin
  */
 public interface ResultSetHandler {
@@ -31,6 +32,9 @@ public interface ResultSetHandler {
 
   <E> Cursor<E> handleCursorResultSets(Statement stmt) throws SQLException;
 
+  /**
+   * 处理存储过程输出参数
+   */
   void handleOutputParameters(CallableStatement cs) throws SQLException;
 
 }

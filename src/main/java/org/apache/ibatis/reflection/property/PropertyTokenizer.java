@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * 属性分词器
+ *
+ * order[0].item[0].name
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
@@ -38,7 +41,9 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
     indexedName = name;
     delim = name.indexOf('[');
     if (delim > -1) {
+      // 取出[]中的内容
       index = name.substring(delim + 1, name.length() - 1);
+      //[]前面的内容
       name = name.substring(0, delim);
     }
   }

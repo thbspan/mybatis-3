@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -71,8 +71,9 @@ public class SimpleStatementHandler extends BaseStatementHandler {
   @Override
   public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
     String sql = boundSql.getSql();
+    // 执行查询
     statement.execute(sql);
-    return resultSetHandler.handleResultSets(statement);
+    return resultSetHandler.<E>handleResultSets(statement);
   }
 
   @Override
@@ -82,8 +83,12 @@ public class SimpleStatementHandler extends BaseStatementHandler {
     return resultSetHandler.handleCursorResultSets(statement);
   }
 
+  /**
+   * 构造Statement对象
+   */
   @Override
   protected Statement instantiateStatement(Connection connection) throws SQLException {
+    // resultSetType是默认类型
     if (mappedStatement.getResultSetType() == ResultSetType.DEFAULT) {
       return connection.createStatement();
     } else {
@@ -92,8 +97,8 @@ public class SimpleStatementHandler extends BaseStatementHandler {
   }
 
   @Override
-  public void parameterize(Statement statement) {
-    // N/A
+  public void parameterize(Statement statement) throws SQLException {
+    // N/A 不需要做参数替换处理
   }
 
 }

@@ -26,6 +26,9 @@ import java.net.URL;
 public class ClassLoaderWrapper {
 
   ClassLoader defaultClassLoader;
+  /**
+   * System ClassLoader / Application ClassLoader
+   */
   ClassLoader systemClassLoader;
 
   ClassLoaderWrapper() {

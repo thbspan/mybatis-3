@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2016 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
 /**
+ * 负责将不同的 Statement 类型，路由到上述三个实现类上
  * @author Clinton Begin
  */
 public class RoutingStatementHandler implements StatementHandler {
@@ -76,7 +77,7 @@ public class RoutingStatementHandler implements StatementHandler {
 
   @Override
   public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
-    return delegate.<E>query(statement, resultHandler);
+    return delegate.query(statement, resultHandler);
   }
 
   @Override

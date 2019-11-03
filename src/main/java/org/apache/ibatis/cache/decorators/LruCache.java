@@ -23,7 +23,7 @@ import org.apache.ibatis.cache.Cache;
 
 /**
  * Lru (least recently used) cache decorator
- *
+ * 控制缓存大小的装饰器：最近最少使用
  * @author Clinton Begin
  */
 public class LruCache implements Cache {

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -55,6 +55,9 @@ public class Reflector {
   private final Map<String, Class<?>> getTypes = new HashMap<>();
   private Constructor<?> defaultConstructor;
 
+  /**
+   * 不区分大小写的属性集合
+   */
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
   public Reflector(Class<?> clazz) {
@@ -63,8 +66,8 @@ public class Reflector {
     addGetMethods(clazz);
     addSetMethods(clazz);
     addFields(clazz);
-    readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
-    writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
+    readablePropertyNames = getMethods.keySet().toArray(new String[0]);
+    writeablePropertyNames = setMethods.keySet().toArray(new String[0]);
     for (String propName : readablePropertyNames) {
       caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
     }
@@ -289,6 +292,7 @@ public class Reflector {
    * @return An array containing all methods in this class
    */
   private Method[] getClassMethods(Class<?> cls) {
+    // 方法名称 -> 方法
     Map<String, Method> uniqueMethods = new HashMap<>();
     Class<?> currentClass = cls;
     while (currentClass != null && currentClass != Object.class) {
@@ -311,6 +315,7 @@ public class Reflector {
 
   private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
     for (Method currentMethod : methods) {
+      // 桥接方法，主要场景：泛型类型擦除
       if (!currentMethod.isBridge()) {
         String signature = getSignature(currentMethod);
         // check to see if the method is already known
@@ -344,7 +349,7 @@ public class Reflector {
 
   /**
    * Checks whether can control member accessible.
-   *
+   * 和AccessibleObject#setAccessible方法中的前面两行的代码逻辑类似，检查程序是否有调用setAccessible的权限
    * @return If can control member accessible, it return {@literal true}
    * @since 3.5.0
    */

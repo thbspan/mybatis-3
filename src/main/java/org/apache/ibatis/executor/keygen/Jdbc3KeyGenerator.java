@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -59,10 +59,12 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   }
 
   public void processBatch(MappedStatement ms, Statement stmt, Object parameter) {
+    // 获取主键的属性参数
     final String[] keyProperties = ms.getKeyProperties();
     if (keyProperties == null || keyProperties.length == 0) {
       return;
     }
+
     try (ResultSet rs = stmt.getGeneratedKeys()) {
       final Configuration configuration = ms.getConfiguration();
       if (rs.getMetaData().getColumnCount() >= keyProperties.length) {
@@ -120,15 +122,20 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
     final TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     final ResultSetMetaData rsmd = rs.getMetaData();
     // Wrap the parameter in Collection to normalize the logic.
+    // 封装成Collection对象方便处理
     Collection<?> paramAsCollection = null;
+    // 原始类型数组处理
     if (param instanceof Object[]) {
       paramAsCollection = Arrays.asList((Object[]) param);
     } else if (!(param instanceof Collection)) {
+      // 单个对象类型处理，封装成数组
       paramAsCollection = Arrays.asList(param);
     } else {
+      // Collection对象
       paramAsCollection = (Collection<?>) param;
     }
     TypeHandler<?>[] typeHandlers = null;
+    // 遍历集合
     for (Object obj : paramAsCollection) {
       if (!rs.next()) {
         break;
@@ -141,6 +148,9 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
     }
   }
 
+  /**
+   * 获得唯一的参数对象
+   */
   private Object getSoleParameter(Object parameter) {
     if (!(parameter instanceof ParamMap || parameter instanceof StrictMap)) {
       return parameter;

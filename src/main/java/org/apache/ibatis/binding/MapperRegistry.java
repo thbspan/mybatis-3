@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -68,8 +68,10 @@ public class MapperRegistry {
         // It's important that the type is added before the parser is run
         // otherwise the binding may automatically be attempted by the
         // mapper parser. If the type is already known, it won't try.
+        // 解析注解
         MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
         parser.parse();
+        // 标记加载完成
         loadCompleted = true;
       } finally {
         if (!loadCompleted) {
@@ -99,6 +101,7 @@ public class MapperRegistry {
   }
 
   /**
+   * 扫码指定包下的指定类
    * @since 3.2.2
    */
   public void addMappers(String packageName) {

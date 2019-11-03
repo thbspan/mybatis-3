@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
+ * 将include标签转换成sql对应的内容
  * @author Frank D. Martinez [mnesarco]
  */
 public class XMLIncludeTransformer {
@@ -52,12 +53,25 @@ public class XMLIncludeTransformer {
   }
 
   /**
+   * 结合配置
+   * <insert id="insertAuthor" parameterType="org.apache.ibatis.domain.blog.Author">
+   * 		<selectKey keyProperty="id" resultType="_int" order="BEFORE">
+   * 			<include refid="selectNum">
+   * 				<property name="num" value="1"/>
+   * 			</include>
+   * 		</selectKey>
+   * 		insert into Author (username,password,email,bio)
+   * 		values (#{username},#{password},#{email},#{bio})
+   * 	</insert>
+   * 处理 insert标签和标签内的子元素（替换${}变量）
    * Recursively apply includes through all SQL fragments.
    * @param source Include node in DOM tree
    * @param variablesContext Current context for static variables with values
    */
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
     if (source.getNodeName().equals("include")) {
+      // 如果是include标签
+      // 得到对应的sql标签
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
       applyIncludes(toInclude, toIncludeContext, true);
@@ -70,7 +84,9 @@ public class XMLIncludeTransformer {
       }
       toInclude.getParentNode().removeChild(toInclude);
     } else if (source.getNodeType() == Node.ELEMENT_NODE) {
+      // 处理sql标签
       if (included && !variablesContext.isEmpty()) {
+        // <sql id="123" lang="${cpu}"> 替换lang的值
         // replace variables in attribute values
         NamedNodeMap attributes = source.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
@@ -84,6 +100,7 @@ public class XMLIncludeTransformer {
       }
     } else if (included && source.getNodeType() == Node.TEXT_NODE
         && !variablesContext.isEmpty()) {
+      // 替换<sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql>中的${alias}变量
       // replace variables in text node
       source.setNodeValue(PropertyParser.parse(source.getNodeValue(), variablesContext));
     }
@@ -105,6 +122,10 @@ public class XMLIncludeTransformer {
   }
 
   /**
+   * <include refid="fd">
+   *       <property name="hello" value="world" />
+   *     </include>
+   * 读取include标签中的property属性
    * Read placeholders and their values from include node definition. 
    * @param node Include node instance
    * @param inheritedVariablesContext Current context used for replace variables in new variables values
