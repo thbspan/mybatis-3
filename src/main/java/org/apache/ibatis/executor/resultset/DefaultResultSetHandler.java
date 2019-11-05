@@ -438,6 +438,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
+    // 创建返回的类型对象
     Object rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
     // 如果 hasTypeHandlerForResultObject(rsw, resultMap.getType()) 返回 true ，意味着 rowValue 是基本类型，无需执行下列逻辑
     if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
@@ -641,7 +642,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     if (resultObject != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
       final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
       for (ResultMapping propertyMapping : propertyMappings) {
-        // issue gcode #109 && issue #149 内嵌查询并且开始延迟加载
+        // issue gcode #109 && issue #149 内嵌查询并且配置了延迟加载
         if (propertyMapping.getNestedQueryId() != null && propertyMapping.isLazy()) {
           resultObject = configuration.getProxyFactory().createProxy(resultObject, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
           break;
@@ -949,6 +950,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     if (rowValue != null) {
       final MetaObject metaObject = configuration.newMetaObject(rowValue);
       putAncestor(rowValue, resultMapId);
+      // 处理嵌套映射，其中会将生成的对象设置到外层对象的相应属性中
       applyNestedResultMappings(rsw, resultMap, metaObject, columnPrefix, combinedKey, false);
       ancestorObjects.remove(resultMapId);
     } else {
@@ -962,12 +964,14 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         }
         foundValues = applyPropertyMappings(rsw, resultMap, metaObject, lazyLoader, columnPrefix) || foundValues;
         putAncestor(rowValue, resultMapId);
+        // 处理嵌套映射，其中会将生成的对象设置到外层对象的相应属性中
         foundValues = applyNestedResultMappings(rsw, resultMap, metaObject, columnPrefix, combinedKey, true) || foundValues;
         ancestorObjects.remove(resultMapId);
         foundValues = lazyLoader.size() > 0 || foundValues;
         rowValue = foundValues || configuration.isReturnInstanceForEmptyRow() ? rowValue : null;
       }
       if (combinedKey != CacheKey.NULL_CACHE_KEY) {
+        // 保存外层对象，待映射后续记录时使用
         nestedResultObjects.put(combinedKey, rowValue);
       }
     }
@@ -989,7 +993,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       if (nestedResultMapId != null && resultMapping.getResultSet() == null) {
         try {
           final String columnPrefix = getColumnPrefix(parentPrefix, resultMapping);
+          // 确定嵌套映射使用的ResultMap对象
           final ResultMap nestedResultMap = getNestedResultMap(rsw.getResultSet(), nestedResultMapId, columnPrefix);
+          // 处理循环引用的情况
           if (resultMapping.getColumnPrefix() == null) {
             // try to fill circular reference only when columnPrefix
             // is not specified for the nested result map (issue #215)
@@ -1005,10 +1011,13 @@ public class DefaultResultSetHandler implements ResultSetHandler {
           final CacheKey combinedKey = combineKeys(rowKey, parentRowKey);
           Object rowValue = nestedResultObjects.get(combinedKey);
           boolean knownValue = rowValue != null;
+          // 如果外层对象中用于记录当前嵌套对象的属性为Collection类型，且未初始化，则初始化该集合对象
           instantiateCollectionPropertyIfAppropriate(resultMapping, metaObject); // mandatory
           if (anyNotNullColumnHasValue(resultMapping, columnPrefix, rsw)) {
+            // 调用getRowValue（）方法完成嵌套映射，并生成嵌套对象。嵌套映射可以嵌套多层，也就可以产生多层递归
             rowValue = getRowValue(rsw, nestedResultMap, combinedKey, columnPrefix, rowValue);
             if (rowValue != null && !knownValue) {
+              // 将上一步中得到的嵌套对象保存到外层对象的相应属性中
               linkObjects(metaObject, resultMapping, rowValue);
               foundValues = true;
             }
@@ -1059,10 +1068,14 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return resolveDiscriminatedResultMap(rs, nestedResultMap, columnPrefix);
   }
 
-  //
-  // UNIQUE RESULT KEY
-  //
-
+  /**
+   * UNIQUE RESULT KEY
+   * 1、尝试使用＜idArg＞节点或＜id＞节点中定义的列名以及该列在当前记录行中对应的列值组成CacheKey对象；
+   * 2、如果ResultMap中没有定义＜idArg＞节点或＜id＞节点，则由ResultMap中明确要映射的列名以及它们在当前记录行中对应的列值一起构成CacheKey对象；
+   * 3、如果经过上述两个步骤后，依然查找不到相关的列名和列值，且ResultMap.type属性明确指明了结果对象为Map类型，则由结果集中所有列名以及该行记录行的所有列值一起构成CacheKey对象；
+   * 4、如果映射的结果对象不是Map类型，则由结果集中未映射的列名以及它们在当前记录行中的对应列值一起构成CacheKey对象
+   *
+   */
   private CacheKey createRowKey(ResultMap resultMap, ResultSetWrapper rsw, String columnPrefix) throws SQLException {
     final CacheKey cacheKey = new CacheKey();
     cacheKey.update(resultMap.getId());
@@ -1097,6 +1110,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private List<ResultMapping> getResultMappingsForRowKey(ResultMap resultMap) {
+    // <id>标签或者<constructor>标签中的<idArg>标签
     List<ResultMapping> resultMappings = resultMap.getIdResultMappings();
     if (resultMappings.isEmpty()) {
       resultMappings = resultMap.getPropertyResultMappings();
@@ -1113,6 +1127,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             prependPrefix(resultMapping.getColumnPrefix(), columnPrefix));
       } else if (resultMapping.getNestedQueryId() == null) {
         final String column = prependPrefix(resultMapping.getColumn(), columnPrefix);
+        // 获取该列对应的TypeHandler对象
         final TypeHandler<?> th = resultMapping.getTypeHandler();
         List<String> mappedColumnNames = rsw.getMappedColumnNames(resultMap, columnPrefix);
         // Issue #114

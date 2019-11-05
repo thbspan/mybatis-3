@@ -53,7 +53,13 @@ public class ResultLoader {
   protected final Class<?> targetType;
   protected final ObjectFactory objectFactory;
   protected final CacheKey cacheKey;
+  /**
+   * 记录了延迟执行的SQL语句和相关的配置信息
+   */
   protected final BoundSql boundSql;
+  /**
+   * 负责将延迟加载的
+   */
   protected final ResultExtractor resultExtractor;
   /**
    * 创建 ResultLoader 对象时，线程ID
@@ -83,6 +89,7 @@ public class ResultLoader {
 
   public Object loadResult() throws SQLException {
     List<Object> list = selectList();
+    // 将list集合转换成targetType指定类型的对象
     resultObject = resultExtractor.extractObjectFromList(list, targetType);
     return resultObject;
   }
@@ -93,6 +100,7 @@ public class ResultLoader {
       localExecutor = newExecutor();
     }
     try {
+      // 执行查询操作
       return localExecutor.<E> query(mappedStatement, parameterObject, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER, cacheKey, boundSql);
     } finally {
       if (localExecutor != executor) {

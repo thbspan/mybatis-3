@@ -44,6 +44,11 @@ import org.apache.ibatis.session.RowBounds;
 /**
  * ResultLoader 的映射。
  * 该映射，最终创建代理对象时，会作为参数传入代理
+ * <br />
+ * 提供了load()和loadAll()两个执行延迟加载的入口方法
+ * <br />
+ * load():加载指定名称的属性
+ * loadAll():加载该对象中全部的延迟加载属性
  * @author Clinton Begin
  * @author Franta Mejta
  */
@@ -92,7 +97,7 @@ public class ResultLoaderMap {
 
   public void loadAll() throws SQLException {
     final Set<String> methodNameSet = loaderMap.keySet();
-    String[] methodNames = methodNameSet.toArray(new String[methodNameSet.size()]);
+    String[] methodNames = methodNameSet.toArray(new String[0]);
     for (String methodName : methodNames) {
       load(methodName);
     }
