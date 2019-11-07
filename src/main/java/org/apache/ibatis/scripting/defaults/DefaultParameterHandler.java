@@ -38,9 +38,18 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  */
 public class DefaultParameterHandler implements ParameterHandler {
 
+  /**
+   * TypeHandlerRegistry对象，管理 mybatis中全部的TypeHandler
+   */
   private final TypeHandlerRegistry typeHandlerRegistry;
 
+  /**
+   * SQL节点相应的配置信息
+   */
   private final MappedStatement mappedStatement;
+  /**
+   * 用户传入的实参对象
+   */
   private final Object parameterObject;
   private final BoundSql boundSql;
   private final Configuration configuration;

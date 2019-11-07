@@ -31,7 +31,6 @@ import org.apache.ibatis.session.ResultHandler;
 public interface StatementHandler {
 
   /**
-<<<<<<< Updated upstream
    * 准备操作，可以理解为创建Statement
    */
   Statement prepare(Connection connection, Integer transactionTimeout) throws SQLException;
@@ -39,16 +38,21 @@ public interface StatementHandler {
   /**
    * 设置statement对象参数
    */
-  void parameterize(Statement statement)
-      throws SQLException;
+  void parameterize(Statement statement) throws SQLException;
 
   /**
    * 批量执行操作
    */
   void batch(Statement statement) throws SQLException;
 
+  /**
+   * 执行update/insert/delete语句
+   */
   int update(Statement statement) throws SQLException;
 
+  /**
+   * 执行查询语句
+   */
   <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException;
 
   <E> Cursor<E> queryCursor(Statement statement) throws SQLException;

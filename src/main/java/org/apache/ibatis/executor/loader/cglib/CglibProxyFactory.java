@@ -89,18 +89,27 @@ public class CglibProxyFactory implements ProxyFactory {
     if (constructorArgTypes.isEmpty()) {
       enhanced = enhancer.create();
     } else {
-      Class<?>[] typesArray = constructorArgTypes.toArray(new Class[constructorArgTypes.size()]);
-      Object[] valuesArray = constructorArgs.toArray(new Object[constructorArgs.size()]);
+      Class<?>[] typesArray = constructorArgTypes.toArray(new Class[0]);
+      Object[] valuesArray = constructorArgs.toArray(new Object[0]);
       enhanced = enhancer.create(typesArray, valuesArray);
     }
     return enhanced;
   }
 
   private static class EnhancedResultObjectProxyImpl implements MethodInterceptor {
-
+    /**
+     * 需要创建代理的目标类
+     */
     private final Class<?> type;
+    // propertyName -> ResultLoader
     private final ResultLoaderMap lazyLoader;
+    /**
+     * 对应配置项 setting name="aggressiveLazyLoading" value="false/true"
+     */
     private final boolean aggressive;
+    /**
+     * 触发延迟加载的方法列表，如果调用了该列表中的方法，则对全部的延迟加载属性进行加载操作
+     */
     private final Set<String> lazyLoadTriggerMethods;
     private final ObjectFactory objectFactory;
     private final List<Class<?>> constructorArgTypes;
@@ -143,6 +152,7 @@ public class CglibProxyFactory implements ProxyFactory {
               return original;
             }
           } else {
+            // 判断是否有延迟加载的属性
             if (lazyLoader.size() > 0 && !FINALIZE_METHOD.equals(methodName)) {
               if (aggressive || lazyLoadTriggerMethods.contains(methodName)) {
                 lazyLoader.loadAll();

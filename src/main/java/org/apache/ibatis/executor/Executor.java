@@ -65,15 +65,18 @@ public interface Executor {
   boolean isCached(MappedStatement ms, CacheKey key);
 
   /**
-   * 清除本地缓存
+   * 清除本地缓存 一级缓存
    */
   void clearLocalCache();
 
   /**
-   * 延迟加载
+   * 延迟加载一级缓存中的数据
    */
   void deferLoad(MappedStatement ms, MetaObject resultObject, String property, CacheKey key, Class<?> targetType);
 
+  /**
+   * 获取事务对象
+   */
   Transaction getTransaction();
 
   /**
@@ -82,6 +85,9 @@ public interface Executor {
    */
   void close(boolean forceRollback);
 
+  /**
+   * 检查Executor是否已关闭
+   */
   boolean isClosed();
 
   void setExecutorWrapper(Executor executor);
