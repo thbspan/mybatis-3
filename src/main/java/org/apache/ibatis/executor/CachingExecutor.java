@@ -33,6 +33,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 为Mybatis增加二级缓存的相关功能
  * @author Clinton Begin
  * @author Eduardo Macarron
  */

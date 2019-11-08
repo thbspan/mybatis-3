@@ -32,7 +32,9 @@ import org.apache.ibatis.logging.LogFactory;
  * Entries are sent to the cache when commit is called or discarded if the Session is rolled back. 
  * Blocking cache support has been added. Therefore any get() that returns a cache miss 
  * will be followed by a put() so any lock associated with the key can be released. 
- * 
+ *
+ * 事务缓存主要用于保存在某个SqlSession的某个事务中需要向某个二级缓存中添加的缓存数据
+ *
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -40,7 +42,13 @@ public class TransactionalCache implements Cache {
 
   private static final Log log = LogFactory.getLog(TransactionalCache.class);
 
+  /**
+   * 封装底层的二级缓存所对应的Cache对象
+   */
   private final Cache delegate;
+  /**
+   * 当该字段为true时，表示当前TransactionalCache不可查询，且提交事务会将底层的Cache清空
+   */
   private boolean clearOnCommit;
   private final Map<Object, Object> entriesToAddOnCommit;
   private final Set<Object> entriesMissedInCache;
@@ -64,12 +72,13 @@ public class TransactionalCache implements Cache {
 
   @Override
   public Object getObject(Object key) {
-    // issue #116
+    // issue #116 查询底层Cache是否包含指定的key
     Object object = delegate.getObject(key);
     if (object == null) {
+      // 如果底层缓存对象中不包含该缓存项，则将该key记录到entriesMissedInCache集合中
       entriesMissedInCache.add(key);
     }
-    // issue #146
+    // issue #146 如果clearOnCommit == true，则当前 TransactionalCache不可查询，始终返回null
     if (clearOnCommit) {
       return null;
     } else {
@@ -117,6 +126,10 @@ public class TransactionalCache implements Cache {
     entriesMissedInCache.clear();
   }
 
+  /**
+   * 将entriesToAddOnCommit集合中的数据保存到二级缓存中
+   * 将entriesMissedInCache集合中的数据，并且不在entriesToAddOnCommit中的数据保存到二级缓存中
+   */
   private void flushPendingEntries() {
     for (Map.Entry<Object, Object> entry : entriesToAddOnCommit.entrySet()) {
       delegate.putObject(entry.getKey(), entry.getValue());
@@ -128,6 +141,9 @@ public class TransactionalCache implements Cache {
     }
   }
 
+  /**
+   * 将entriesMissedInCache集合中记录的缓存项从二级缓存中删除
+   */
   private void unlockMissedEntries() {
     for (Object entry : entriesMissedInCache) {
       try {
