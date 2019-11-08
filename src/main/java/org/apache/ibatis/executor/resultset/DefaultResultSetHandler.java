@@ -435,7 +435,6 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
   // GET VALUE FROM ROW FOR SIMPLE RESULT MAP
   //
-
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
     // 创建返回的类型对象
@@ -447,10 +446,11 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       boolean foundValues = this.useConstructorMappings;
       // 判断是否开启自动映射，（<resultMap type="com.kingdee.web.entity.BankState2" id="bankStateList2" autoMapping="true">） 默认没有配置autoMapping属性，所有getAutoMapping 返回null
       if (shouldApplyAutomaticMappings(resultMap, false)) {
-        // 自定义映射未配置的属性
+        // 自动映射ResultMap中未明确映射的列
         // 调试代码org.apache.ibatis.submitted.call_setters_on_nulls.CallSettersOnNullsTest.shouldCallNullOnAutomaticMapping
         foundValues = applyAutomaticMappings(rsw, resultMap, metaObject, columnPrefix) || foundValues;
       }
+      // 映射ResultMap中明确指定需要映射的列
       foundValues = applyPropertyMappings(rsw, resultMap, metaObject, lazyLoader, columnPrefix) || foundValues;
       foundValues = lazyLoader.size() > 0 || foundValues;
       rowValue = foundValues || configuration.isReturnInstanceForEmptyRow() ? rowValue : null;
@@ -878,15 +878,20 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
 
   public ResultMap resolveDiscriminatedResultMap(ResultSet rs, ResultMap resultMap, String columnPrefix) throws SQLException {
+    // 记录已经处理过的ResultMap的id
     Set<String> pastDiscriminators = new HashSet<>();
     Discriminator discriminator = resultMap.getDiscriminator();
     while (discriminator != null) {
+      // 获取记录中对应列的值
       final Object value = getDiscriminatorValue(rs, discriminator, columnPrefix);
+      // 根据该列值获取对应的ResultMap的id
       final String discriminatedMapId = discriminator.getMapIdFor(String.valueOf(value));
       if (configuration.hasResultMap(discriminatedMapId)) {
         resultMap = configuration.getResultMap(discriminatedMapId);
+        // 记录当前Discriminator对象
         Discriminator lastDiscriminator = discriminator;
         discriminator = resultMap.getDiscriminator();
+        // 检查Discriminator是否出现了循环引用
         if (discriminator == lastDiscriminator || !pastDiscriminators.add(discriminatedMapId)) {
           break;
         }

@@ -165,12 +165,14 @@ public abstract class BaseExecutor implements Executor {
     }
     // 例如 <select flushCache="true">
     if (queryStack == 0 && ms.isFlushCacheRequired()) {
+      // 非嵌套查询 and <select> flushCache属性配置为true
       clearLocalCache();
     }
     List<E> list;
     try {
+      // 增加查询层数：有查询至少一层
       queryStack++;
-      // resultHandler == null 先从本地缓存中查找
+      // resultHandler == null 先从本地缓存（一级缓存）中查找
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
         // 处理存储过程
@@ -183,14 +185,16 @@ public abstract class BaseExecutor implements Executor {
       queryStack--;
     }
     if (queryStack == 0) {
-      // 延迟加载
+      // 在外层的查询结束时，所有嵌套查询也已经完成，相关缓存项也已经完全加载，
+      // 所以在这里可以触发DeferredLoad加载一级缓存中记录的嵌套查询的结果对象
       for (DeferredLoad deferredLoad : deferredLoads) {
         deferredLoad.load();
       }
-      // issue #601
+      // issue #601 加载完成后，清空deferredLoads集合
       deferredLoads.clear();
 
       // 如果缓存级别是 LocalCacheScope.STATEMENT（语句级） （默认SESSION会话级），则进行清理
+      // LocalCacheScope配置是影响一级缓存中结果对象存活时长的第二个方面
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
         // issue #482
         clearLocalCache();
@@ -212,8 +216,10 @@ public abstract class BaseExecutor implements Executor {
     }
     DeferredLoad deferredLoad = new DeferredLoad(resultObject, property, key, localCache, configuration, targetType);
     if (deferredLoad.canLoad()) {
+      // 一级缓存中已经记录了指定查询的查询结果，直接从缓存中加载对象，并设置到外层对象中
       deferredLoad.load();
     } else {
+      // 添加到deferredLoads队列中，待整个外层查询结束后，再加载该结果对象
       deferredLoads.add(new DeferredLoad(resultObject, property, key, localCache, configuration, targetType));
     }
   }
@@ -235,6 +241,7 @@ public abstract class BaseExecutor implements Executor {
     TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
     // mimic DefaultParameterHandler logic
     for (ParameterMapping parameterMapping : parameterMappings) {
+      // 过滤掉输出类型的参数
       if (parameterMapping.getMode() != ParameterMode.OUT) {
         Object value;
         String propertyName = parameterMapping.getProperty();
@@ -268,7 +275,9 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Cannot commit, transaction is already closed");
     }
+    // 清空一级缓存
     clearLocalCache();
+    // 执行缓存的SQL语句
     flushStatements();
     if (required) {
       transaction.commit();
@@ -280,6 +289,7 @@ public abstract class BaseExecutor implements Executor {
     if (!closed) {
       try {
         clearLocalCache();
+        // Executor中缓存的SQL语句全部被忽略(不会被发送到数据库执行)
         flushStatements(true);
       } finally {
         if (required) {
@@ -405,6 +415,12 @@ public abstract class BaseExecutor implements Executor {
       this.targetType = targetType;
     }
 
+    /**
+     * 检查缓存项是否已经完全加载到缓存中
+     *
+     * “完全加载”：在BaseExecutor.queryFromDatabase方法中，开始查询数据库之前先添加 EXECUTION_PLACEHOLDER 占位符
+     * 待查询完成之后，才将真正的对象放到localCache中缓存，此时该缓存才算“完全加载”
+     */
     public boolean canLoad() {
       return localCache.getObject(key) != null && localCache.getObject(key) != EXECUTION_PLACEHOLDER;
     }

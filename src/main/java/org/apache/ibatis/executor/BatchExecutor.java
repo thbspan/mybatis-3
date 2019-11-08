@@ -43,9 +43,21 @@ public class BatchExecutor extends BaseExecutor {
 
   public static final int BATCH_UPDATE_RETURN_VALUE = Integer.MIN_VALUE + 1002;
 
+  /**
+   * 缓存多个Statement对象，其中每个Statement对象中都缓存了多条SQL语句
+   */
   private final List<Statement> statementList = new ArrayList<>();
+  /**
+   * 记录批处理的结果
+   */
   private final List<BatchResult> batchResultList = new ArrayList<>();
+  /**
+   * 当前执行的SQL语句
+   */
   private String currentSql;
+  /**
+   * 记录当前执行的MappedStatement对象
+   */
   private MappedStatement currentStatement;
 
   public BatchExecutor(Configuration configuration, Transaction transaction) {
