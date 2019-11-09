@@ -42,7 +42,8 @@ public class CachingExecutor implements Executor {
   private final Executor delegate;
   /**
    * TransactionalCacheManager 对象，支持事务的缓存管理器。
-   * 因为二级缓存是支持跨 Session 进行共享，此处需要考虑事务，那么，必然需要做到事务提交时，才将当前事务中查询时产生的缓存，同步到二级缓存中
+   * 因为二级缓存是支持跨 Session 进行共享，此处需要考虑事务，
+   * 那么，必然需要做到事务提交时，才将当前事务中查询时产生的缓存，同步到二级缓存中
    */
   private final TransactionalCacheManager tcm = new TransactionalCacheManager();
 
@@ -83,7 +84,9 @@ public class CachingExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    // 1、获取BoundSql
     BoundSql boundSql = ms.getBoundSql(parameterObject);
+    // 2、创建CacheKey对象
     CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
     return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
@@ -126,7 +129,9 @@ public class CachingExecutor implements Executor {
 
   @Override
   public void commit(boolean required) throws SQLException {
+    // 调用底层的Executor提交事务
     delegate.commit(required);
+    // 遍历所有相关的TransactionalCache对象执行commit()方法
     tcm.commit();
   }
 

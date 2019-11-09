@@ -51,6 +51,9 @@ public class TransactionalCache implements Cache {
    */
   private boolean clearOnCommit;
   private final Map<Object, Object> entriesToAddOnCommit;
+  /**
+   * 与 {@link BlockingCache}的支持有关，防止发生死锁
+   */
   private final Set<Object> entriesMissedInCache;
 
   public TransactionalCache(Cache delegate) {
@@ -93,6 +96,7 @@ public class TransactionalCache implements Cache {
 
   @Override
   public void putObject(Object key, Object object) {
+    // 将缓存项暂存在entriesToAddOnCommit集合中，事务提交时才会将这些结果放到二级缓存中
     entriesToAddOnCommit.put(key, object);
   }
 
