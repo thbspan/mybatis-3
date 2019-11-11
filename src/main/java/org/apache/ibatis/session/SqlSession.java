@@ -34,7 +34,7 @@ public interface SqlSession extends Closeable {
   /**
    * Retrieve a single row mapped from the statement key
    * @param <T> the returned object type
-   * @param statement
+   * @param statement 查询语句
    * @return Mapped object
    */
   <T> T selectOne(String statement);
@@ -80,6 +80,8 @@ public interface SqlSession extends Closeable {
    * The selectMap is a special case in that it is designed to convert a list
    * of results into a Map based on one of the properties in the resulting
    * objects.
+   * 类似selectList()，但是结果集合被映射成了Map
+   * 第二个参数指定了结果集哪一列作为Map的key
    * Eg. Return a of Map[Integer,Author] for selectMap("selectAuthors","id")
    * @param <K> the returned Map keys type
    * @param <V> the returned Map values type
@@ -244,6 +246,7 @@ public interface SqlSession extends Closeable {
   void rollback(boolean force);
 
   /**
+   * 将请求刷新到数据库
    * Flushes batch statements.
    * @return BatchResult list of updated records
    * @since 3.0.6

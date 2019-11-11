@@ -32,6 +32,9 @@ public class Plugin implements InvocationHandler {
 
   private final Object target;
   private final Interceptor interceptor;
+  /**
+   * Signature 注解中的信息
+   */
   private final Map<Class<?>, Set<Method>> signatureMap;
 
   private Plugin(Object target, Interceptor interceptor, Map<Class<?>, Set<Method>> signatureMap) {

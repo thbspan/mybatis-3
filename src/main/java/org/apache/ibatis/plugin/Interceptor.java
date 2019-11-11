@@ -29,6 +29,8 @@ public interface Interceptor {
 
   /**
    * 应用插件。如应用成功，则会创建目标对象的代理对象
+   * <br />
+   * 决定是否触发intercept()方法
    */
   Object plugin(Object target);
 

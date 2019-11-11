@@ -49,10 +49,22 @@ import org.apache.ibatis.session.SqlSession;
 public class DefaultSqlSession implements SqlSession {
 
   private final Configuration configuration;
+  /**
+   * 底层依赖的Executor对象
+   */
   private final Executor executor;
-
+  /**
+   * 是否自动提交事务
+   */
   private final boolean autoCommit;
+  /**
+   * 当前缓存中是否有脏数据
+   */
   private boolean dirty;
+  /**
+   * 为了防止用户忘记关闭已经打开的游标对象，会通过这个字段保存该SqlSession对象生成的游标对象
+   * 在DefaultSqlSession关闭时统一关闭这些游标
+   */
   private List<Cursor<?>> cursorList;
 
   public DefaultSqlSession(Configuration configuration, Executor executor, boolean autoCommit) {
