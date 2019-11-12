@@ -16,6 +16,7 @@
 package org.apache.ibatis.scripting.xmltags;
 
 /**
+ * <if 节点解析
  * @author Clinton Begin
  */
 public class IfSqlNode implements SqlNode {

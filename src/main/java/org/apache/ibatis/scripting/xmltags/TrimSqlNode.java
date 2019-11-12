@@ -25,6 +25,8 @@ import java.util.StringTokenizer;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * trim/where标签
+ * <trim prefix="WHERE" prefixOverrides="AND" suffixOverrides="," == <where
  * @author Clinton Begin
  */
 public class TrimSqlNode implements SqlNode {
@@ -52,7 +54,9 @@ public class TrimSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     FilteredDynamicContext filteredDynamicContext = new FilteredDynamicContext(context);
+    // 调用子节点的apply()方法进行解析
     boolean result = contents.apply(filteredDynamicContext);
+    // 处理前缀和后缀
     filteredDynamicContext.applyAll();
     return result;
   }
@@ -149,6 +153,9 @@ public class TrimSqlNode implements SqlNode {
       }
     }
 
+    /**
+     * 添加后缀
+     */
     private void applySuffix(StringBuilder sql, String trimmedUppercaseSql) {
       if (!suffixApplied) {
         suffixApplied = true;

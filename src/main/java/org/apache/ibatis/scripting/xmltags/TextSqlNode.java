@@ -23,6 +23,7 @@ import org.apache.ibatis.scripting.ScriptingException;
 import org.apache.ibatis.type.SimpleTypeRegistry;
 
 /**
+ * 表示包含${}占位符的动态SQL节点
  * @author Clinton Begin
  */
 public class TextSqlNode implements SqlNode {
@@ -48,6 +49,7 @@ public class TextSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
+    // 将解析后的SQL片段添加到context中
     context.appendSql(parser.parse(text));
     return true;
   }
@@ -68,7 +70,8 @@ public class TextSqlNode implements SqlNode {
 
     @Override
     public String handleToken(String content) {
-      Object parameter = context.getBindings().get("_parameter");
+      // 获取用户提供的实参
+      Object parameter = context.getBindings().get(DynamicContext.PARAMETER_OBJECT_KEY);
       if (parameter == null) {
         context.getBindings().put("value", null);
       } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {

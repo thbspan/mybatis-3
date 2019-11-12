@@ -49,6 +49,7 @@ public class DynamicContext {
 
   public DynamicContext(Configuration configuration, Object parameterObject) {
     if (parameterObject != null && !(parameterObject instanceof Map)) {
+      // 非Map类型参数
       MetaObject metaObject = configuration.newMetaObject(parameterObject);
       bindings = new ContextMap(metaObject);
     } else {
@@ -71,6 +72,9 @@ public class DynamicContext {
     sqlBuilder.append(" ");
   }
 
+  /**
+   * 获取解析后的、完整的SQL语句
+   */
   public String getSql() {
     return sqlBuilder.toString().trim();
   }

@@ -56,8 +56,8 @@ public class XMLStatementBuilder extends BaseBuilder {
   /**
    * 结合配置阅读
    *  <select id="selectAllPosts" resultType="hashmap">
-   *     select * from post order by id
-   *   </select>
+   *      select * from post order by id
+   *  </select>
    *
    *   属性	描述
    * id	在命名空间中唯一的标识符，可以被用来引用这条语句。

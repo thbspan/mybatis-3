@@ -121,6 +121,18 @@ public class ForEachSqlNode implements SqlNode {
     return ITEM_PREFIX + item + "_" + i;
   }
 
+  /**
+   * 处理 foreach中的#{}占位符，把他们表示为特殊的#{}占位符，方便后续变量替换
+   * #{item} -> #{__frch_item_1}
+   * #{itemIndex} -> #{__frch_itemIndex_1}
+   *
+   * select * from Blog B where id IN
+   * <foreach collection="ids" index="idx" item="itm" open="(" close=")" separator="," close=",">
+   *     #{itm}
+   * </foreach>
+   * __frch_idx_0 __frch_idx_1
+   * select * from Blog B where id IN (#{__frch_itm_0}, #{__frch_itm_1})
+   */
   private static class FilteredDynamicContext extends DynamicContext {
     private final DynamicContext delegate;
     private final int index;
@@ -173,7 +185,13 @@ public class ForEachSqlNode implements SqlNode {
 
   private class PrefixedContext extends DynamicContext {
     private final DynamicContext delegate;
+    /**
+     * 指定的前缀
+     */
     private final String prefix;
+    /**
+     * 是否已经处理过前缀
+     */
     private boolean prefixApplied;
 
     public PrefixedContext(DynamicContext delegate, String prefix) {
