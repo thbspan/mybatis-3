@@ -28,6 +28,7 @@ public class SimpleTypeRegistryTest {
   @Test
   public void shouldTestIfClassIsSimpleTypeAndReturnTrue() {
     assertTrue(SimpleTypeRegistry.isSimpleType(String.class));
+    assertFalse(SimpleTypeRegistry.isSimpleType(int.class));
   }
 
   @Test

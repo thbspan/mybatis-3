@@ -23,12 +23,15 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.Configuration;
 
 /**
- * 包含${}表达式的SQL
+ * 负责解析动态SQL(包含${}表达式的SQL)
  * @author Clinton Begin
  */
 public class DynamicSqlSource implements SqlSource {
 
   private final Configuration configuration;
+  /**
+   * SqlNode使用组合模式，rootSqlNode记录了待解析的SqlNode树的根节点
+   */
   private final SqlNode rootSqlNode;
 
   public DynamicSqlSource(Configuration configuration, SqlNode rootSqlNode) {

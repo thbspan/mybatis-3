@@ -57,9 +57,9 @@ public class XmlMapperBuilderTest {
   @Test
   public void mappedAnnotation() throws Exception {
     Configuration configuration = new Configuration();
-    MapperAnnotationBuilder builder = new MapperAnnotationBuilder(configuration, AnnotationMapper.class);
+//    MapperAnnotationBuilder builder = new MapperAnnotationBuilder(configuration, AnnotationMapper.class);
 
-    builder.parse();
+//    builder.parse();
   }
 
   @Test

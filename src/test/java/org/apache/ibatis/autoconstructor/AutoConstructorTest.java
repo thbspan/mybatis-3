@@ -58,9 +58,9 @@ public class AutoConstructorTest {
 
   @Test(expected = BindingException.class)
   public void notExistMapper(){
-    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
-      sqlSession.getMapper(TestMapper.class);
-    }
+//    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+//      sqlSession.getMapper(TestMapper.class);
+//    }
   }
 
   @Test(expected = PersistenceException.class)

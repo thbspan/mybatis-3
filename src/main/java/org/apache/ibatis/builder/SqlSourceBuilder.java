@@ -41,7 +41,8 @@ public class SqlSourceBuilder extends BaseBuilder {
   }
 
   public SqlSource parse(String originalSql, Class<?> parameterType, Map<String, Object> additionalParameters) {
-    //  将匹配到的#{}替换成?
+    // 解析#{frc_item_0, javaType=int, jdbcType=NUMERIC,typeHandler=XXX}中配置的属性
+    // 将#{}占位符替换成?占位符
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
     String sql = parser.parse(originalSql);
