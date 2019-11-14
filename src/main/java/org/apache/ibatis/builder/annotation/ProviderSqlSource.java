@@ -29,6 +29,11 @@ import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * InsertProvider
+ * UpdateProvider
+ * DeleteProvider
+ * SelectProvider
+ * 这些注解允许你指定一个类名和一个方法，获取动态的SQL
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
